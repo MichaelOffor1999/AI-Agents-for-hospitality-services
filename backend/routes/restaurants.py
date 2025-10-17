@@ -7,12 +7,20 @@ router = APIRouter()
 
 @router.get("/", response_model=List[Restaurant])
 async def get_restaurants():
-    restaurants = await db.restaurants.find().to_list(100)
+    restaurants = []
+    async for restaurant in db.restaurants.find():
+        restaurant["id"] = str(restaurant["_id"])
+        print(restaurant["_id"])
+        print(str(restaurant["_id"]))
+        
+        if restaurant.pop("_id", None):
+            print("popped it")
+        restaurants.append(Restaurant(**restaurant))
     return restaurants
 
 @router.post("/", response_model=Restaurant)
 async def create_restaurant(restaurant: Restaurant):
-    result = await db.restaurants.insert_one(restaurant.dict(by_alias=True))
+    result = await db.restaurants.insert_one(restaurant.dict(exclude={"id"}, by_alias=True))
     restaurant.id = str(result.inserted_id)
     return restaurant
 
@@ -21,7 +29,9 @@ async def get_restaurant(restaurant_id: str):
     restaurant = await db.restaurants.find_one({"_id": restaurant_id})
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
-    return restaurant
+    restaurant["id"] = str(restaurant["_id"])
+    restaurant.pop("_id", None)
+    return Restaurant(**restaurant)
 
 @router.put("/{restaurant_id}", response_model=Restaurant)
 async def update_restaurant(restaurant_id: str, restaurant: Restaurant):
