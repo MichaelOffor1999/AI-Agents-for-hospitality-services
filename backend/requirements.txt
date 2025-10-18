@@ -1,13 +1,10 @@
 fastapi==0.104.0
-uvicorn==0.23.2
-python-multipart==0.0.6
+motor==3.7.1
 openai==0.28.1
-motor==3.3.1
 python-dotenv==1.0.0
 pydantic==2.4.2
-aiohttp==3.8.6
+pymongo==4.15.3
 requests==2.31.0
-elevenlabs==0.2.26
-twilio==8.9.1
-vapi-client==0.1.0  # You'll need to check the actual package name and version
-python-jose[cryptography]==3.3.0
+starlette==0.27.0
+twilio==9.8.4
+uvicorn==0.23.2
