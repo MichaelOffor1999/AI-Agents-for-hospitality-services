@@ -1,0 +1,65 @@
+# React Native/Expo .gitignore
+# Node modules
+node_modules/
+
+# Build output
+.expo/
+.expo-shared/
+dist/
+build/
+web-build/
+
+# Metro, Babel, Yarn, npm
+.cache/
+babel-cache/
+yarn-error.log
+yarn.lock
+npm-debug.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
+
+# Test coverage
+coverage/
+
+# Environment files
+.env
+.env.*
+
+# Expo assets
+*.expo
+
+# Misc
+*.log
+*.tmp
+
+# Ignore generated files
+*.bak
+
+# Ignore macOS system files
+Icon?
+
+# Ignore Expo managed workflow files
+*.expo/
+
+# Ignore package manager lock files (optional, if you use only one)
+# yarn.lock
+# package-lock.json
+
+# Ignore backup files
+*.orig
+*.rej
+
+# Ignore Expo config
+app.json
+
+# Ignore generated assets
+assets/*.db
+assets/*.bak
+assets/*.tmp

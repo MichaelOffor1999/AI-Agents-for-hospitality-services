@@ -13,15 +13,18 @@ import {
   Animated,
   Dimensions,
   FlatList,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useApp } from '../context/AppContext';
 import { formatCurrency } from '../utils/helpers';
+import { useTheme } from '../utils/theme';
 
 const { width: screenWidth } = Dimensions.get('window');
 
 const MenuManagementScreen = () => {
+  const theme = useTheme();
   const { menuItems, tenant, loadMenuItems, updateMenuItem, isLoading } = useApp();
   
   const [refreshing, setRefreshing] = useState(false);
@@ -292,156 +295,150 @@ const MenuManagementScreen = () => {
 
   const renderMenuItem = ({ item }) => (
     <Animated.View style={[styles.menuItemCard, { transform: [{ scale: scaleAnim }] }]}>
-      <TouchableOpacity
-        style={styles.menuItemContent}
-        onPress={() => setEditingItem(item)}
-        activeOpacity={0.95}
-      >
-        {/* Item Header */}
-        <View style={styles.itemHeader}>
-          <View style={styles.itemImageContainer}>
-            <Text style={styles.itemEmoji}>{item.image}</Text>
-            {item.isPopular && (
-              <View style={styles.popularBadge}>
-                <Ionicons name="flame" size={12} color="#FF6B35" />
-              </View>
-            )}
-          </View>
-          
-          <View style={styles.itemInfo}>
-            <View style={styles.itemTitleRow}>
-              <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
-              <Text style={styles.itemPrice}>{formatCurrency(item.price)}</Text>
-            </View>
-            
-            <Text style={styles.itemDescription} numberOfLines={2}>
-              {item.description}
-            </Text>
-            
-            <View style={styles.itemMeta}>
-              <View style={styles.metaBadge}>
-                <Ionicons name="time-outline" size={12} color="#666" />
-                <Text style={styles.metaText}>{item.prepTime}</Text>
-              </View>
-              
-              {item.dietary.length > 0 && (
-                <View style={styles.metaBadge}>
-                  <Ionicons name="leaf-outline" size={12} color="#10B981" />
-                  <Text style={[styles.metaText, { color: '#10B981' }]}>
-                    {item.dietary[0]}
-                  </Text>
+      <View style={styles.menuItemContentWrapper}>
+        <TouchableOpacity
+          style={styles.menuItemContent}
+          onPress={() => setEditingItem(item)}
+          activeOpacity={0.95}
+        >
+          {/* Item Header */}
+          <View style={styles.itemHeader}>
+            <View style={[styles.itemImageContainer, { backgroundColor: theme.chartIconBg }]}> {/* Use theme.chartIconBg */}
+              <Text style={styles.itemEmoji}>{item.image}</Text>
+              {item.isPopular && (
+                <View style={styles.popularBadge}>
+                  <Ionicons name="flame" size={12} color="#FF6B35" />
                 </View>
               )}
             </View>
-          </View>
-        </View>
-
-        {/* Item Controls */}
-        <View style={styles.itemControls}>
-          <TouchableOpacity 
-            style={styles.editButton}
-            onPress={(e) => {
-              e.stopPropagation();
-              setEditingItem(item);
-              setAddItemModalVisible(true);
-            }}
-          >
-            <Ionicons name="create-outline" size={20} color="#4F83FF" />
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[
-              styles.availabilityToggle, 
-              item.available ? styles.toggleActive : styles.toggleInactive
-            ]}
-            onPress={(e) => {
-              e.stopPropagation();
-              console.log('Toggle pressed for item:', item.id, 'current state:', item.available);
-              toggleAvailability(item.id);
-            }}
-            activeOpacity={0.8}
-          >
-            <View style={[
-              styles.toggleIndicator, 
-              { 
-                transform: [{ 
-                  translateX: item.available ? 26 : 2 
-                }] 
-              }
-            ]}>
-              <Ionicons 
-                name={item.available ? "checkmark" : "close"} 
-                size={12} 
-                color="#fff" 
-              />
-            </View>
             
-            {/* Toggle Track Labels */}
-            <View style={styles.toggleTrack}>
-              <Text style={[styles.toggleLabel, styles.toggleLabelLeft]}>OFF</Text>
-              <Text style={[styles.toggleLabel, styles.toggleLabelRight]}>ON</Text>
+            <View style={styles.itemInfo}>
+              <View style={styles.itemTitleRow}>
+                <Text style={[styles.itemName, { color: theme.textStrong }]} numberOfLines={1}>{item.name}</Text>
+                <Text style={[styles.itemPrice, { color: theme.success }]}>{formatCurrency(item.price)}</Text>
+              </View>
+              
+              <Text style={[styles.itemDescription, { color: theme.textDim }]} numberOfLines={2}>
+                {item.description}
+              </Text>
+              
+              <View style={styles.itemMeta}>
+                <View style={[styles.metaBadge, { backgroundColor: theme.bg }]}> {/* Use theme.bg */}
+                  <Ionicons name="time-outline" size={12} color={theme.textDim} />
+                  <Text style={[styles.metaText, { color: theme.textDim }]}>{item.prepTime}</Text>
+                </View>
+                
+                {item.dietary.length > 0 && (
+                  <View style={[styles.metaBadge, { backgroundColor: theme.bg }]}> {/* Use theme.bg */}
+                    <Ionicons name="leaf-outline" size={12} color={theme.success} />
+                    <Text style={[styles.metaText, { color: theme.success }]}>
+                      {item.dietary[0]}
+                    </Text>
+                  </View>
+                )}
+              </View>
             </View>
-          </TouchableOpacity>
-        </View>
-      </TouchableOpacity>
-      
-      {!item.available && (
-        <View style={styles.unavailableOverlay}>
-          <Text style={styles.unavailableText}>Currently Unavailable</Text>
-        </View>
-      )}
+          </View>
+
+          {/* Item Controls (edit + toggle) - ONLY ONCE! */}
+          <View style={styles.itemControls}>
+            <TouchableOpacity 
+              style={[styles.editButton, { backgroundColor: theme.chartIconBg }]}
+              onPress={(e) => {
+                e.stopPropagation();
+                setEditingItem(item);
+                setAddItemModalVisible(true);
+              }}
+            >
+              <Ionicons name="create-outline" size={20} color={theme.primary} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[
+                styles.availabilityToggle, 
+                item.available ? styles.toggleActive : styles.toggleInactive
+              ]}
+              onPress={(e) => {
+                e.stopPropagation();
+                toggleAvailability(item.id);
+              }}
+              activeOpacity={0.8}
+            >
+              <View style={[
+                styles.toggleIndicator, 
+                { 
+                  backgroundColor: theme.buttonBg, shadowColor: theme.primary },
+                  { 
+                    transform: [{ 
+                      translateX: item.available ? 26 : 2 
+                    }] 
+                  }
+              ]}>
+                <Ionicons 
+                  name={item.available ? "checkmark" : "close"} 
+                  size={12} 
+                  color={item.available ? theme.success : theme.danger} 
+                />
+              </View>
+              
+              {/* Toggle Track Labels */}
+              <View style={styles.toggleTrack}>
+                <Text style={[styles.toggleLabel, styles.toggleLabelLeft, { color: theme.textDim }]}>OFF</Text>
+                <Text style={[styles.toggleLabel, styles.toggleLabelRight, { color: theme.success }]}>ON</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+        {/* Overlay only covers content, not controls */}
+        {!item.available && (
+          <View style={[styles.unavailableOverlay, { backgroundColor: theme.bg, borderColor: theme.border }]} pointerEvents="none">
+            <Text style={[styles.unavailableText, { color: theme.textDim }]}>Currently Unavailable</Text>
+          </View>
+        )}
+      </View>
     </Animated.View>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}> {/* Use theme.bg */}
       {/* Enhanced Header */}
       <LinearGradient
-        colors={['#4F83FF', '#6366F1']}
+        colors={[theme.primary, theme.accent]}
         style={styles.headerGradient}
       >
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <View style={styles.headerLeft}>
-              <View style={styles.headerIconContainer}>
-                <Ionicons name="restaurant" size={24} color="#fff" />
+              <View style={[styles.headerIconContainer, { backgroundColor: theme.buttonBg }]}> {/* Use theme.buttonBg */}
+                <Ionicons name="restaurant" size={24} color={theme.primary} />
               </View>
               <View>
-                <Text style={styles.headerTitle}>Menu Management</Text>
-                <Text style={styles.headerSubtitle}>
+                <Text style={[styles.headerTitle, { color: theme.textStrong }]}>Menu Management</Text>
+                <Text style={[styles.headerSubtitle, { color: theme.textDim }]}>
                   {filteredMenuData.length} items • {filteredMenuData.filter(i => i.available).length} available
                 </Text>
               </View>
             </View>
             
             <View style={styles.headerActions}>
-              <TouchableOpacity 
-                style={styles.viewToggle}
-                onPress={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-              >
-                <Ionicons 
-                  name={viewMode === 'grid' ? 'list' : 'grid'} 
-                  size={20} 
-                  color="#fff" 
-                />
-              </TouchableOpacity>
+              {/* Removed view toggle button with Ionicons list/grid icon */}
             </View>
           </View>
 
           {/* Search Bar */}
           <View style={styles.searchContainer}>
-            <View style={styles.searchBar}>
-              <Ionicons name="search" size={20} color="#666" />
+            <View style={[styles.searchBar, { backgroundColor: theme.buttonBg }]}> {/* Use theme.buttonBg */}
+              <Ionicons name="search" size={20} color={theme.textDim} />
               <TextInput
-                style={styles.searchInput}
+                style={[styles.searchInput, { color: theme.textStrong }]}
                 placeholder="Search menu items..."
                 value={searchQuery}
                 onChangeText={setSearchQuery}
-                placeholderTextColor="#999"
+                placeholderTextColor={theme.textDim}
               />
               {searchQuery.length > 0 && (
                 <TouchableOpacity onPress={() => setSearchQuery('')}>
-                  <Ionicons name="close-circle" size={20} color="#666" />
+                  <Ionicons name="close-circle" size={20} color={theme.iconDim} />
                 </TouchableOpacity>
               )}
             </View>
@@ -454,18 +451,22 @@ const MenuManagementScreen = () => {
             style={styles.categoryScrollView}
             contentContainerStyle={styles.categoryContainer}
           >
-            {categories.map(category => (
+            {categories.map((category, idx) => (
               <TouchableOpacity
                 key={category}
                 style={[
                   styles.categoryButton,
-                  selectedCategory === category && styles.categoryButtonActive
+                  { backgroundColor: selectedCategory === category ? theme.buttonBg : 'transparent', borderColor: theme.border },
+                  selectedCategory === category && { backgroundColor: theme.primary },
+                  idx === 0 && styles.categoryButtonFirst,
+                  idx === categories.length - 1 && styles.categoryButtonLast
                 ]}
                 onPress={() => setSelectedCategory(category)}
               >
                 <Text style={[
                   styles.categoryButtonText,
-                  selectedCategory === category && styles.categoryButtonTextActive
+                  { color: selectedCategory === category ? '#fff' : theme.textDim },
+                  selectedCategory === category && { color: '#fff' }
                 ]}>
                   {category}
                   {category !== 'All' && ` (${groupedItems[category]?.length || 0})`}
@@ -491,9 +492,9 @@ const MenuManagementScreen = () => {
         ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
         ListEmptyComponent={() => (
           <View style={styles.emptyState}>
-            <Ionicons name="restaurant" size={64} color="#ccc" />
-            <Text style={styles.emptyStateTitle}>No items found</Text>
-            <Text style={styles.emptyStateText}>
+            <Ionicons name="restaurant" size={64} color={theme.iconDim} />
+            <Text style={[styles.emptyStateTitle, { color: theme.textDim }]}>No items found</Text>
+            <Text style={[styles.emptyStateText, { color: theme.textDim }]}>
               {searchQuery ? 'Try adjusting your search' : 'Add your first menu item'}
             </Text>
           </View>
@@ -501,7 +502,7 @@ const MenuManagementScreen = () => {
       />
 
       {/* Floating Add Button */}
-      <Animated.View style={[styles.floatingButton, { transform: [{ scale: scaleAnim }] }]}>
+      <Animated.View style={[styles.floatingButton, { transform: [{ scale: scaleAnim }] }]}> {/* unchanged */}
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => {
@@ -512,7 +513,7 @@ const MenuManagementScreen = () => {
           activeOpacity={0.8}
         >
           <LinearGradient
-            colors={['#10B981', '#059669']}
+            colors={[theme.success, theme.primary]}
             style={styles.addButtonGradient}
           >
             <Ionicons name="add" size={28} color="#fff" />
@@ -527,34 +528,32 @@ const MenuManagementScreen = () => {
         presentationStyle="pageSheet"
         onRequestClose={() => setAddItemModalVisible(false)}
       >
-        <SafeAreaView style={styles.modalContainer}>
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: theme.bg }]}> {/* Use theme.bg */}
           {/* Modal Header */}
           <LinearGradient
-            colors={['#4F83FF', '#6366F1']}
+            colors={[theme.primary, theme.accent]}
             style={styles.modalHeaderGradient}
           >
             <View style={styles.modalHeader}>
               <TouchableOpacity 
-                style={styles.modalCloseButton}
+                style={[styles.modalCloseButton, { backgroundColor: theme.buttonBg }]}
                 onPress={() => setAddItemModalVisible(false)}
               >
-                <Ionicons name="close" size={24} color="#fff" />
+                <Ionicons name="close" size={24} color={theme.primary} />
               </TouchableOpacity>
-              
               <View style={styles.modalTitleContainer}>
-                <Text style={styles.modalTitle}>
+                <Text style={[styles.modalTitle, { color: theme.textStrong }]}>
                   {editingItem ? 'Edit Menu Item' : 'Add New Item'}
                 </Text>
-                <Text style={styles.modalSubtitle}>
+                <Text style={[styles.modalSubtitle, { color: theme.textDim }]}>
                   {editingItem ? 'Update item details' : 'Create a delicious new dish'}
                 </Text>
               </View>
-              
               <TouchableOpacity 
-                style={styles.modalSaveButton}
+                style={[styles.modalSaveButton, { backgroundColor: theme.success }]}
                 onPress={handleSaveItem}
               >
-                <Text style={styles.modalSaveText}>Save</Text>
+                <Text style={[styles.modalSaveText, { color: '#fff' }]}>Save</Text>
               </TouchableOpacity>
             </View>
           </LinearGradient>
@@ -562,14 +561,14 @@ const MenuManagementScreen = () => {
           <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
             {/* Item Image/Emoji Selector */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Item Icon</Text>
+              <Text style={[styles.inputLabel, { color: theme.textStrong }]}>Item Icon</Text>
               <View style={styles.emojiSelector}>
                 {['🍚', '🐟', '🥩', '🦞', '🥗', '🍫', '🍸', '🍕'].map((emoji) => (
                   <TouchableOpacity
                     key={emoji}
                     style={[
                       styles.emojiOption,
-                      newItem.image === emoji && styles.emojiOptionSelected
+                      newItem.image === emoji && { borderColor: theme.primary, backgroundColor: theme.cardGlass }
                     ]}
                     onPress={() => setNewItem({ ...newItem, image: emoji })}
                   >
@@ -581,30 +580,30 @@ const MenuManagementScreen = () => {
 
             {/* Item Name */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Item Name *</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons name="restaurant-outline" size={20} color="#666" />
+              <Text style={[styles.inputLabel, { color: theme.textStrong }]}>Item Name *</Text>
+              <View style={[styles.inputWrapper, { backgroundColor: theme.buttonBg, borderColor: theme.border }]}> {/* Use theme.buttonBg */}
+                <Ionicons name="restaurant-outline" size={20} color={theme.textDim} />
                 <TextInput
-                  style={styles.textInput}
+                  style={[styles.textInput, { color: theme.textStrong }]}
                   value={newItem.name}
                   onChangeText={(text) => setNewItem({ ...newItem, name: text })}
                   placeholder="Enter item name"
-                  placeholderTextColor="#999"
+                  placeholderTextColor={theme.textDim}
                 />
               </View>
             </View>
 
             {/* Price */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Price *</Text>
-              <View style={styles.inputWrapper}>
-                <Text style={styles.currencySymbol}>€</Text>
+              <Text style={[styles.inputLabel, { color: theme.textStrong }]}>Price *</Text>
+              <View style={[styles.inputWrapper, { backgroundColor: theme.buttonBg, borderColor: theme.border }]}> {/* Use theme.buttonBg */}
+                <Text style={[styles.currencySymbol, { color: theme.success }]}>€</Text>
                 <TextInput
-                  style={styles.textInput}
+                  style={[styles.textInput, { color: theme.textStrong }]}
                   value={newItem.price}
                   onChangeText={(text) => setNewItem({ ...newItem, price: text })}
                   placeholder="0.00"
-                  placeholderTextColor="#999"
+                  placeholderTextColor={theme.textDim}
                   keyboardType="decimal-pad"
                 />
               </View>
@@ -612,7 +611,7 @@ const MenuManagementScreen = () => {
 
             {/* Category */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Category</Text>
+              <Text style={[styles.inputLabel, { color: theme.textStrong }]}>Category</Text>
               <ScrollView 
                 horizontal 
                 showsHorizontalScrollIndicator={false}
@@ -624,13 +623,13 @@ const MenuManagementScreen = () => {
                       key={category}
                       style={[
                         styles.categoryChip,
-                        newItem.category === category && styles.categoryChipSelected
+                        newItem.category === category && { backgroundColor: theme.primary, borderColor: theme.primary }
                       ]}
                       onPress={() => setNewItem({ ...newItem, category })}
                     >
                       <Text style={[
                         styles.categoryChipText,
-                        newItem.category === category && styles.categoryChipTextSelected
+                        newItem.category === category && { color: '#fff' }
                       ]}>
                         {category}
                       </Text>
@@ -642,14 +641,14 @@ const MenuManagementScreen = () => {
 
             {/* Description */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Description</Text>
-              <View style={styles.textAreaWrapper}>
+              <Text style={[styles.inputLabel, { color: theme.textStrong }]}>Description</Text>
+              <View style={[styles.textAreaWrapper, { backgroundColor: theme.buttonBg, borderColor: theme.border }]}> {/* Use theme.buttonBg */}
                 <TextInput
-                  style={styles.textAreaInput}
+                  style={[styles.textAreaInput, { color: theme.textStrong }]}
                   value={newItem.description}
                   onChangeText={(text) => setNewItem({ ...newItem, description: text })}
                   placeholder="Describe this delicious item..."
-                  placeholderTextColor="#999"
+                  placeholderTextColor={theme.textDim}
                   multiline
                   numberOfLines={3}
                 />
@@ -658,29 +657,29 @@ const MenuManagementScreen = () => {
 
             {/* Preparation Time */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Prep Time</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons name="time-outline" size={20} color="#666" />
+              <Text style={[styles.inputLabel, { color: theme.textStrong }]}>Prep Time</Text>
+              <View style={[styles.inputWrapper, { backgroundColor: theme.buttonBg, borderColor: theme.border }]}> {/* Use theme.buttonBg */}
+                <Ionicons name="time-outline" size={20} color={theme.textDim} />
                 <TextInput
-                  style={styles.textInput}
+                  style={[styles.textInput, { color: theme.textStrong }]}
                   value={newItem.prepTime || ''}
                   onChangeText={(text) => setNewItem({ ...newItem, prepTime: text })}
                   placeholder="e.g., 15 min"
-                  placeholderTextColor="#999"
+                  placeholderTextColor={theme.textDim}
                 />
               </View>
             </View>
 
             {/* Dietary Options */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Dietary Information</Text>
+              <Text style={[styles.inputLabel, { color: theme.textStrong }]}>Dietary Information</Text>
               <View style={styles.dietaryOptions}>
                 {['vegetarian', 'vegan', 'gluten-free', 'dairy-free'].map((diet) => (
                   <TouchableOpacity
                     key={diet}
                     style={[
                       styles.dietaryChip,
-                      newItem.dietary?.includes(diet) && styles.dietaryChipSelected
+                      newItem.dietary?.includes(diet) && { backgroundColor: theme.success, borderColor: theme.success }
                     ]}
                     onPress={() => {
                       const dietary = newItem.dietary || [];
@@ -693,11 +692,11 @@ const MenuManagementScreen = () => {
                     <Ionicons 
                       name="leaf-outline" 
                       size={16} 
-                      color={newItem.dietary?.includes(diet) ? '#10B981' : '#666'} 
+                      color={newItem.dietary?.includes(diet) ? '#fff' : theme.textDim} 
                     />
                     <Text style={[
                       styles.dietaryChipText,
-                      newItem.dietary?.includes(diet) && styles.dietaryChipTextSelected
+                      newItem.dietary?.includes(diet) && { color: '#fff' }
                     ]}>
                       {diet}
                     </Text>
@@ -710,15 +709,13 @@ const MenuManagementScreen = () => {
             <View style={styles.inputGroup}>
               <View style={styles.toggleRow}>
                 <View style={styles.toggleInfo}>
-                  <Text style={styles.inputLabel}>Mark as Popular</Text>
-                  <Text style={styles.toggleDescription}>
-                    Show flame icon and highlight this item
-                  </Text>
+                  <Text style={[styles.inputLabel, { color: theme.textStrong }]}>Mark as Popular</Text>
+                  <Text style={[styles.toggleDescription, { color: theme.textDim }]}>Show flame icon and highlight this item</Text>
                 </View>
                 <TouchableOpacity
                   style={[
                     styles.popularToggle,
-                    newItem.isPopular && styles.popularToggleActive
+                    newItem.isPopular && { backgroundColor: theme.accent }
                   ]}
                   onPress={() => setNewItem({ ...newItem, isPopular: !newItem.isPopular })}
                 >
@@ -729,7 +726,7 @@ const MenuManagementScreen = () => {
                     <Ionicons 
                       name={newItem.isPopular ? "flame" : "flame-outline"} 
                       size={16} 
-                      color={newItem.isPopular ? "#FF6B35" : "#666"} 
+                      color={newItem.isPopular ? theme.primary : theme.textDim} 
                     />
                   </Animated.View>
                 </TouchableOpacity>
@@ -748,7 +745,7 @@ const MenuManagementScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9ff',
+    // backgroundColor: '#f8f9ff',
   },
   
   // Enhanced Header Styles
@@ -773,7 +770,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    // backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -781,12 +778,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#fff',
+    // color: '#fff',
     marginBottom: 2,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
+    // color: 'rgba(255, 255, 255, 0.8)',
     fontWeight: '500',
   },
   headerActions: {
@@ -797,7 +794,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    // backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -809,7 +806,7 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    // backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -822,38 +819,54 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
+    // color: '#333',
     marginLeft: 12,
     marginRight: 8,
   },
 
   // Category Filter Styles
   categoryScrollView: {
-    marginBottom: -10,
+    maxHeight: 72, // increased for more space
+    minHeight: 56, // ensure enough height
+    marginTop: 8,
+    marginBottom: 8,
+    paddingTop: 8,
+    paddingBottom: 8, // add bottom padding
   },
   categoryContainer: {
-    paddingRight: 20,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    minHeight: 48, // ensure enough height for touch
   },
   categoryButton: {
     paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingVertical: 10, // slightly increased
+    borderRadius: 22,
+    // backgroundColor: 'rgba(255, 255, 255, 0.2)',
     marginRight: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    // borderColor: 'rgba(255, 255, 255, 0.3)',
+    minWidth: 80, // ensure button is not too small
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  categoryButtonFirst: {
+    marginLeft: 8, // extra space at start
+  },
+  categoryButtonLast: {
+    marginRight: 20, // extra space at end
   },
   categoryButtonActive: {
-    backgroundColor: '#fff',
-    borderColor: '#fff',
+    // backgroundColor: '#fff',
+    // borderColor: '#fff',
   },
   categoryButtonText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.9)',
+    // color: 'rgba(255, 255, 255, 0.92)',
   },
   categoryButtonTextActive: {
-    color: '#4F83FF',
+    // color: '#4F83FF',
   },
 
   // Menu List Styles
@@ -867,17 +880,21 @@ const styles = StyleSheet.create({
 
   // Enhanced Menu Item Card
   menuItemCard: {
-    backgroundColor: '#fff',
     borderRadius: 16,
-    shadowColor: '#4F83FF',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
+    borderWidth: 1.5,
+    // borderColor, backgroundColor, shadowColor must be set inline using theme
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 8,
     overflow: 'hidden',
+    ...(Platform.OS !== 'android' ? { backdropFilter: 'blur(8px)' } : {}),
   },
   menuItemContent: {
     padding: 20,
+  },
+  menuItemContentWrapper: {
+    position: 'relative',
   },
   itemHeader: {
     marginBottom: 16,
@@ -886,7 +903,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#f0f4ff',
+    // backgroundColor: '#f0f4ff',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
@@ -902,11 +919,10 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#FFF4E6',
+    // backgroundColor, borderColor must be set inline using theme
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#fff',
   },
   itemInfo: {
     flex: 1,
@@ -920,18 +936,18 @@ const styles = StyleSheet.create({
   itemName: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1a1a1a',
+    // color: '#1a1a1a',
     flex: 1,
     marginRight: 12,
   },
   itemPrice: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#10B981',
+    // color: '#10B981',
   },
   itemDescription: {
     fontSize: 14,
-    color: '#666',
+    // color: '#666',
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -942,7 +958,7 @@ const styles = StyleSheet.create({
   metaBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    // backgroundColor: '#f8f9fa',
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -950,7 +966,7 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    color: '#666',
+    // color: '#666',
     fontWeight: '500',
     marginLeft: 4,
   },
@@ -962,13 +978,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    // borderTopColor: '#f0f0f0',
   },
   editButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f0f4ff',
+    // backgroundColor must be set inline using theme
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -982,16 +998,16 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   toggleActive: {
-    backgroundColor: '#10B981',
+    // backgroundColor: '#10B981',
   },
   toggleInactive: {
-    backgroundColor: '#E5E7EB',
+    // backgroundColor: '#E5E7EB',
   },
   toggleIndicator: {
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: '#fff',
+    // backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -1020,10 +1036,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   toggleLabelLeft: {
-    color: '#9CA3AF',
+    // color: '#9CA3AF',
   },
   toggleLabelRight: {
-    color: 'rgba(255, 255, 255, 0.9)',
+    // color: 'rgba(255, 255, 255, 0.9)',
   },
   
   // Unavailable Overlay
@@ -1032,16 +1048,27 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    bottom: 0, // covers only content, not controls
+    // backgroundColor, borderColor must be set inline using theme
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 16,
+    zIndex: 2,
+    borderRadius: 20,
+    borderWidth: 1,
+    ...(Platform.OS !== 'android' ? { backdropFilter: 'blur(2px)' } : {}),
   },
   unavailableText: {
-    color: '#fff',
+    // color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0,0,0,0.18)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    // backgroundColor: 'rgba(0,0,0,0.18)',
+    borderRadius: 8,
   },
 
   // Floating Add Button
@@ -1054,7 +1081,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    shadowColor: '#10B981',
+    // shadowColor must be set inline using theme
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -1077,20 +1104,20 @@ const styles = StyleSheet.create({
   emptyStateTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#666',
+    // color: '#666',
     marginTop: 16,
     marginBottom: 8,
   },
   emptyStateText: {
     fontSize: 14,
-    color: '#999',
+    // color: '#999',
     textAlign: 'center',
   },
 
   // Modal and Form Styles
   modalContainer: {
     flex: 1,
-    backgroundColor: '#f8f9ff',
+    // backgroundColor: '#f8f9ff',
   },
   modalHeaderGradient: {
     paddingBottom: 20,
@@ -1106,7 +1133,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    // backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1117,24 +1144,24 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#fff',
+    // color: '#fff',
     marginBottom: 2,
   },
   modalSubtitle: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
+    // color: 'rgba(255, 255, 255, 0.8)',
     fontWeight: '500',
   },
   modalSaveButton: {
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    // backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 20,
   },
   modalSaveText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    // color: '#fff',
   },
   modalContent: {
     flex: 1,
@@ -1149,18 +1176,18 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    // color: '#333',
     marginBottom: 12,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    // backgroundColor must be set inline using theme
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    // borderColor must be set inline using theme
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -1170,20 +1197,20 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
+    // color: '#333',
     marginLeft: 12,
   },
   currencySymbol: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#10B981',
+    // color: '#10B981',
   },
   textAreaWrapper: {
-    backgroundColor: '#fff',
+    // backgroundColor must be set inline using theme
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    // borderColor must be set inline using theme
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -1192,7 +1219,7 @@ const styles = StyleSheet.create({
   },
   textAreaInput: {
     fontSize: 16,
-    color: '#333',
+    // color: '#333',
     textAlignVertical: 'top',
     minHeight: 80,
   },
@@ -1206,17 +1233,16 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#fff',
+    // backgroundColor, borderColor must be set inline using theme
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
     marginBottom: 12,
     borderWidth: 2,
-    borderColor: '#e5e7eb',
   },
   emojiOptionSelected: {
-    borderColor: '#4F83FF',
-    backgroundColor: '#f0f4ff',
+    // borderColor: '#4F83FF',
+    // backgroundColor: '#f0f4ff',
   },
   emojiText: {
     fontSize: 24,
@@ -1235,10 +1261,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 25,
-    backgroundColor: '#fff',
+    // backgroundColor, borderColor must be set inline using theme
     marginRight: 12,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -1246,16 +1271,16 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   categoryChipSelected: {
-    backgroundColor: '#4F83FF',
-    borderColor: '#4F83FF',
+    // backgroundColor: '#4F83FF',
+    // borderColor: '#4F83FF',
   },
   categoryChipText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
+    // color: '#666',
   },
   categoryChipTextSelected: {
-    color: '#fff',
+    // color: '#fff',
   },
 
   // Dietary Options
@@ -1269,24 +1294,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: '#fff',
+    // backgroundColor, borderColor must be set inline using theme
     marginRight: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
   },
   dietaryChipSelected: {
-    backgroundColor: '#f0fdf4',
-    borderColor: '#10B981',
+    // backgroundColor: '#f0fdf4',
+    // borderColor: '#10B981',
   },
   dietaryChipText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#666',
+    // color: '#666',
     marginLeft: 6,
   },
   dietaryChipTextSelected: {
-    color: '#10B981',
+    // color: '#10B981',
   },
 
   // Popular Toggle
@@ -1300,25 +1324,25 @@ const styles = StyleSheet.create({
   },
   toggleDescription: {
     fontSize: 14,
-    color: '#666',
+    // color: '#666',
     marginTop: 4,
   },
   popularToggle: {
     width: 60,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#e5e7eb',
+    // backgroundColor must be set inline using theme
     padding: 2,
     justifyContent: 'center',
   },
   popularToggleActive: {
-    backgroundColor: '#FFF4E6',
+    // backgroundColor: '#FFF4E6',
   },
   popularToggleIndicator: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#fff',
+    // backgroundColor must be set inline using theme
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -1331,26 +1355,26 @@ const styles = StyleSheet.create({
   // Legacy modal styles (keep existing ones that might still be referenced)
   cancelButton: {
     fontSize: 16,
-    color: '#6B7280',
+    // color: '#6B7280',
   },
   categoryOption: {
-    backgroundColor: '#F3F4F6',
+    // backgroundColor: '#F3F4F6',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    // borderColor: '#E5E7EB',
   },
   selectedCategory: {
-    backgroundColor: '#EBF4FF',
-    borderColor: '#4F83FF',
+    // backgroundColor: '#EBF4FF',
+    // borderColor: '#4F83FF',
   },
   categoryText: {
     fontSize: 14,
-    color: '#374151',
+    // color: '#374151',
   },
   selectedCategoryText: {
-    color: '#4F83FF',
+    // color: '#4F83FF',
     fontWeight: '500',
   },
 });

@@ -6,31 +6,38 @@ import {
   ScrollView,
   SafeAreaView,
   TextInput,
-  TouchableOpacity,
   FlatList,
   Dimensions,
+  TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '../utils/theme';
+import { useRoute } from '@react-navigation/native';
+
+const screenWidth = Dimensions.get('window').width;
 
 const TranscriptsScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('All');
-
+  const [showOnlyOrder, setShowOnlyOrder] = useState(false); // NEW
+  const theme = useTheme();
+  const route = useRoute();
+  const orderId = route.params?.orderId;
   const conversations = [
     {
-      id: 1,
+      id: '12345',
       callId: 'CALL-001',
       phone: '+1 (555) 123-4567',
       date: 'Oct 15, 2025',
       duration: '2m 15s',
       status: 'completed',
-      customerName: 'John Smith',
+      customerName: 'John Doe',
       orderTotal: '$18.50',
       messages: [
         {
           type: 'customer',
-          text: 'Hello, I\'d like to place an order for pickup.',
+          text: "Hello, I'd like to place an order for pickup.",
           time: '10:32 AM',
           avatar: 'customer-1',
         },
@@ -42,250 +49,332 @@ const TranscriptsScreen = () => {
         },
         {
           type: 'customer',
-          text: 'I\'ll have a large pepperoni pizza and a side of garlic bread.',
+          text: "I'll have two fish and chips...",
           time: '10:33 AM',
-          avatar: 'customer-1',
-        },
-        {
-          type: 'ai',
-          text: 'Great choice. Anything to drink with that?',
-          time: '10:33 AM',
-          avatar: 'ai',
-        },
-        {
-          type: 'customer',
-          text: 'No, that\'s all. Thanks.',
-          time: '10:34 AM',
           avatar: 'customer-1',
         },
       ],
     },
     {
-      id: 2,
+      id: '12346',
       callId: 'CALL-002',
       phone: '+1 (555) 987-6543',
-      date: 'Oct 15, 2025',
-      duration: '1m 45s',
+      date: 'Oct 14, 2025',
+      duration: '3m 05s',
       status: 'completed',
-      customerName: 'Sarah Wilson',
-      orderTotal: '$24.75',
+      customerName: 'Jane Smith',
+      orderTotal: '$24.00',
       messages: [
         {
           type: 'customer',
-          text: 'Hi, do you have any vegetarian options?',
-          time: '11:15 AM',
+          text: 'Hi, do you have any vegan options?',
+          time: '11:10 AM',
           avatar: 'customer-2',
         },
         {
           type: 'ai',
-          text: 'Absolutely! We have several delicious vegetarian dishes. Would you like me to recommend some?',
-          time: '11:15 AM',
+          text: 'Yes, we have a vegan burger and salad. Would you like to order?',
+          time: '11:11 AM',
           avatar: 'ai',
         },
         {
           type: 'customer',
-          text: 'Yes, please. Something with pasta would be great.',
-          time: '11:16 AM',
-          avatar: 'customer-2',
-        },
-        {
-          type: 'ai',
-          text: 'I recommend our Truffle Risotto - it\'s very popular and completely vegetarian!',
-          time: '11:16 AM',
-          avatar: 'ai',
-        },
-        {
-          type: 'customer',
-          text: 'Perfect! I\'ll take one of those for delivery.',
-          time: '11:17 AM',
+          text: "I'll take the vegan burger and a lemonade.",
+          time: '11:12 AM',
           avatar: 'customer-2',
         },
       ],
     },
+    {
+      id: '12347',
+      callId: 'CALL-003',
+      phone: '+1 (555) 222-3333',
+      date: 'Oct 13, 2025',
+      duration: '1m 45s',
+      status: 'pending',
+      customerName: 'Carlos Rivera',
+      orderTotal: '$12.75',
+      messages: [
+        {
+          type: 'customer',
+          text: 'Can I get a chicken wrap for delivery?',
+          time: '1:05 PM',
+          avatar: 'customer-3',
+        },
+        {
+          type: 'ai',
+          text: 'Absolutely! May I have your address, please?',
+          time: '1:06 PM',
+          avatar: 'ai',
+        },
+        {
+          type: 'customer',
+          text: '123 Main St, Apt 4B.',
+          time: '1:06 PM',
+          avatar: 'customer-3',
+        },
+      ],
+    },
+    {
+      id: '12348',
+      callId: 'CALL-004',
+      phone: '+1 (555) 444-5555',
+      date: 'Oct 12, 2025',
+      duration: '2m 30s',
+      status: 'completed',
+      customerName: 'Emily Chen',
+      orderTotal: '$30.00',
+      messages: [
+        {
+          type: 'customer',
+          text: 'I want to place a large group order for 5 people.',
+          time: '6:20 PM',
+          avatar: 'customer-4',
+        },
+        {
+          type: 'ai',
+          text: 'Great! What would you like to order for your group?',
+          time: '6:21 PM',
+          avatar: 'ai',
+        },
+        {
+          type: 'customer',
+          text: '3 burgers, 2 salads, and 5 drinks.',
+          time: '6:22 PM',
+          avatar: 'customer-4',
+        },
+      ],
+    },
+    {
+      id: '12349',
+      callId: 'CALL-005',
+      phone: '+1 (555) 666-7777',
+      date: 'Oct 11, 2025',
+      duration: '1m 10s',
+      status: 'completed',
+      customerName: 'Fatima Al-Farsi',
+      orderTotal: '$9.99',
+      messages: [
+        {
+          type: 'customer',
+          text: 'Do you have gluten-free pizza?',
+          time: '3:15 PM',
+          avatar: 'customer-5',
+        },
+        {
+          type: 'ai',
+          text: 'Yes, we do! Would you like to order one?',
+          time: '3:16 PM',
+          avatar: 'ai',
+        },
+        {
+          type: 'customer',
+          text: 'Yes, please. One gluten-free margherita.',
+          time: '3:16 PM',
+          avatar: 'customer-5',
+        },
+      ],
+    },
   ];
-
   const filters = ['All', 'Today', 'This Week', 'Completed', 'Pending'];
-
-  const getAvatarColor = (avatar) => {
-    if (avatar === 'ai') {
-      return '#8B5CF6';
-    }
-    return '#10B981';
-  };
-
-  const getAvatarIcon = (avatar) => {
-    if (avatar === 'ai') {
-      return null; // Will show "AI" text
-    }
-    return null; // Will show customer icon
-  };
+  let filteredConversations = conversations;
+  // Only filter by orderId if showOnlyOrder is true
+  if (orderId && showOnlyOrder) {
+    filteredConversations = conversations.filter(c => c.id.toString() === orderId.toString());
+  }
+  if (searchQuery) {
+    filteredConversations = filteredConversations.filter(c =>
+      c.callId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.customerName.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }
+  if (selectedFilter !== 'All') {
+    filteredConversations = filteredConversations.filter(c => c.status === selectedFilter.toLowerCase());
+  }
 
   const renderConversation = ({ item: conversation }) => (
-    <View style={styles.conversationCard}>
-      {/* Conversation Header */}
-      <View style={styles.conversationHeader}>
-        <View style={styles.headerLeft}>
-          <View style={styles.callInfo}>
-            <View style={styles.callIdContainer}>
-              <Ionicons name="call" size={14} color="#4F83FF" />
-              <Text style={styles.callId}>{conversation.callId}</Text>
-            </View>
-            <Text style={styles.phoneNumber}>{conversation.phone}</Text>
+    <View style={[styles.conversationCard, { backgroundColor: theme.cardGlass, borderColor: theme.border }]}> 
+      <View style={[styles.conversationHeaderRedesigned, { backgroundColor: theme.headerGlass, borderBottomColor: theme.border }]}> 
+        <View style={styles.headerLeftCol}> 
+          <View style={styles.callIdPhoneRow}> 
+            <Ionicons name="call" size={16} color="#4F83FF" style={{marginRight: 6}} />
+            <Text style={styles.callIdRedesigned}>{conversation.callId}</Text>
           </View>
-          <View style={styles.customerInfo}>
-            <Text style={styles.customerName}>{conversation.customerName}</Text>
-            <View style={styles.orderInfo}>
-              <Ionicons name="receipt-outline" size={12} color="#10B981" />
-              <Text style={styles.orderTotal}>{conversation.orderTotal}</Text>
+          <Text style={styles.phoneNumberRedesigned}>{conversation.phone}</Text>
+          <View style={styles.customerNameOrderRow}>
+            <Text style={[styles.customerNameRedesigned, { color: theme.textStrong }]} numberOfLines={2} ellipsizeMode="tail">{conversation.customerName}</Text>
+            <View style={styles.orderInfoRedesigned}>
+              <Ionicons name="receipt-outline" size={14} color="#10B981" />
+              <Text style={styles.orderTotalRedesigned}>{conversation.orderTotal}</Text>
             </View>
           </View>
         </View>
-        
-        <View style={styles.headerRight}>
-          <View style={[styles.statusBadge, styles.completedBadge]}>
-            <Ionicons name="checkmark-circle" size={12} color="#10B981" />
-            <Text style={styles.statusText}>Completed</Text>
+        <View style={styles.headerRightCol}>
+          <View style={[styles.statusBadge, styles.completedBadge, {alignSelf: 'flex-end'}]}>
+            <Ionicons name="checkmark-circle" size={13} color="#10B981" />
+            <Text style={[styles.statusText, { color: theme.textStrong }]}>Completed</Text>
           </View>
-          <Text style={styles.callDate}>{conversation.date}</Text>
-          <Text style={styles.duration}>{conversation.duration}</Text>
+          <Text style={styles.callDateRedesigned}>{conversation.date}</Text>
+          <Text style={styles.durationRedesigned}>{conversation.duration}</Text>
         </View>
       </View>
-
-      {/* Messages */}
-      <View style={styles.messagesContainer}>
-        {conversation.messages.map((message, index) => (
-          <View key={index} style={styles.messageRow}>
-            <View 
+      <View style={[styles.messagesContainerRedesigned, { backgroundColor: theme.bg }]}> 
+        {conversation.messages.map((message, index) => {
+          const isAI = message.type === 'ai';
+          return (
+            <View
+              key={index}
               style={[
-                styles.messageAvatar,
-                message.type === 'ai' ? styles.aiAvatar : styles.customerAvatar
+                styles.messageRowRedesigned,
+                isAI ? styles.messageRowAI : styles.messageRowCustomer,
               ]}
             >
-              {message.type === 'ai' ? (
-                <LinearGradient
-                  colors={['#667eea', '#764ba2']}
-                  style={styles.aiAvatarGradient}
+              {isAI && (
+                <View style={styles.messageAvatarRedesigned}>
+                  <LinearGradient
+                    colors={theme.primary === '#4F83FF' ? ["#667eea", "#764ba2"] : [theme.primary, theme.accent]}
+                    style={styles.aiAvatarGradient}
+                  >
+                    <Ionicons name="sparkles" size={16} color="#fff" />
+                  </LinearGradient>
+                </View>
+              )}
+              <View style={styles.messageContentRedesigned}>
+                <View
+                  style={[
+                    styles.messageBubbleRedesigned,
+                    isAI
+                      ? { backgroundColor: theme.primary, borderBottomLeftRadius: 4 }
+                      : { backgroundColor: theme.buttonBg, borderColor: theme.border, borderWidth: 1, borderBottomRightRadius: 4 },
+                  ]}
                 >
-                  <Ionicons name="sparkles" size={14} color="#fff" />
-                </LinearGradient>
-              ) : (
-                <View style={styles.customerAvatarCircle}>
-                  <Ionicons name="person" size={14} color="#10B981" />
+                  <Text
+                    style={[
+                      styles.messageTextRedesigned,
+                      isAI ? { color: '#fff' } : { color: theme.textStrong },
+                    ]}
+                  >
+                    {message.text}
+                  </Text>
+                </View>
+                <View style={styles.messageMetaRow}>
+                  <Text style={[styles.messageSenderRedesigned, { color: theme.textDim }]}> 
+                    {isAI ? 'AI Assistant' : conversation.customerName || 'Customer'}
+                  </Text>
+                  <Text style={[styles.messageTimeRedesigned, { color: theme.textDim }]}>{message.time}</Text>
+                </View>
+              </View>
+              {!isAI && (
+                <View style={styles.messageAvatarRedesigned}>
+                  <View style={[styles.customerAvatarCircle, { backgroundColor: theme.cardGlass }]}> 
+                    <Ionicons name="person" size={16} color={theme.success} />
+                  </View>
                 </View>
               )}
             </View>
-            
-            <View style={styles.messageContent}>
-              <View style={styles.messageHeader}>
-                <Text style={styles.messageSender}>
-                  {message.type === 'ai' ? 'AI Assistant' : 'Customer'}
-                </Text>
-                <Text style={styles.messageTime}>{message.time}</Text>
-              </View>
-              
-              <View 
-                style={[
-                  styles.messageBubble,
-                  message.type === 'ai' ? styles.aiBubble : styles.customerBubble
-                ]}
-              >
-                <Text 
-                  style={[
-                    styles.messageText,
-                    message.type === 'ai' ? styles.aiMessageText : styles.customerMessageText
-                  ]}
-                >
-                  {message.text}
-                </Text>
-              </View>
-            </View>
-          </View>
-        ))}
+          );
+        })}
       </View>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Enhanced Header */}
-      <LinearGradient
-        colors={['#667eea', '#764ba2']}
-        style={styles.headerGradient}
-      >
-        <View style={styles.header}>
-          <View style={styles.headerTop}>
-            <View style={styles.headerLeft}>
-              <View style={styles.headerIconContainer}>
-                <Ionicons name="chatbubbles" size={24} color="#fff" />
-              </View>
-              <View>
-                <Text style={styles.headerTitle}>Call Transcripts</Text>
-                <Text style={styles.headerSubtitle}>
-                  {conversations.length} conversations • AI-powered assistance
-                </Text>
-              </View>
-            </View>
-            
-            <TouchableOpacity style={styles.exportButton}>
-              <Ionicons name="download-outline" size={20} color="#fff" />
-            </TouchableOpacity>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.bg, flex: 1 }]}> 
+      <View style={{ padding: 20, paddingBottom: 0 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+          <Ionicons name="chatbubble-ellipses" size={32} color={theme.primary} style={{ marginRight: 14 }} />
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 22, fontWeight: 'bold', color: theme.textStrong }}>Call Transcripts</Text>
+            <Text style={{ fontSize: 13, color: theme.textDim, marginTop: 2 }}>{filteredConversations.length} conversation{filteredConversations.length !== 1 ? 's' : ''} · AI-powered assistance</Text>
           </View>
-
-          {/* Search Bar */}
-          <View style={styles.searchContainer}>
-            <View style={styles.searchBar}>
-              <Ionicons name="search" size={20} color="#666" />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search by Call ID, Phone, or Date..."
-                placeholderTextColor="#999"
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
-              {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={() => setSearchQuery('')}>
-                  <Ionicons name="close-circle" size={20} color="#666" />
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-
-          {/* Filter Tabs */}
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            style={styles.filtersScrollView}
-            contentContainerStyle={styles.filtersContainer}
-          >
-            {filters.map(filter => (
-              <TouchableOpacity
-                key={filter}
-                style={[
-                  styles.filterButton,
-                  selectedFilter === filter && styles.filterButtonActive
-                ]}
-                onPress={() => setSelectedFilter(filter)}
-              >
-                <Text style={[
-                  styles.filterButtonText,
-                  selectedFilter === filter && styles.filterButtonTextActive
-                ]}>
-                  {filter}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
         </View>
-      </LinearGradient>
-
-      {/* Conversations List */}
+        {/* Show toggle if navigated with orderId */}
+        {orderId && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8, marginTop: 2 }}>
+            <TouchableOpacity
+              style={{
+                backgroundColor: showOnlyOrder ? theme.primary : theme.buttonBg,
+                borderRadius: 18,
+                paddingHorizontal: 14,
+                paddingVertical: 7,
+                borderWidth: 1,
+                borderColor: theme.border,
+                marginRight: 10,
+              }}
+              onPress={() => setShowOnlyOrder(v => !v)}
+              activeOpacity={0.85}
+            >
+              <Text style={{ color: showOnlyOrder ? '#fff' : theme.primary, fontWeight: '600', fontSize: 14 }}>
+                {showOnlyOrder ? 'Showing This Order Only' : 'Show Only This Order'}
+              </Text>
+            </TouchableOpacity>
+            <Text style={{ color: theme.textDim, fontSize: 13 }}>
+              {showOnlyOrder ? 'Filtered by order' : 'Showing all transcripts'}
+            </Text>
+          </View>
+        )}
+        <View style={{ marginTop: 8 }}>
+          <View style={{
+            backgroundColor: theme.buttonBg,
+            borderRadius: 14,
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+            borderWidth: 1,
+            borderColor: theme.border,
+            shadowColor: '#000',
+            shadowOpacity: 0.03,
+            shadowRadius: 4,
+          }}>
+            <Ionicons name="search" size={20} color={theme.textDim} style={{ marginRight: 8 }} />
+            <TextInput
+              style={{ flex: 1, color: theme.textStrong, fontSize: 15 }}
+              placeholder="Search by Call ID, Phone, or Name..."
+              placeholderTextColor={theme.textDim}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')} style={{ marginLeft: 8 }}>
+                <Ionicons name="close-circle" size={20} color={theme.iconDim} />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row', gap: 12, justifyContent: 'flex-start', paddingHorizontal: 2 }} style={{ marginTop: 18 }}>
+          {filters.map(filter => (
+            <TouchableOpacity
+              key={filter}
+              style={{
+                backgroundColor: selectedFilter === filter ? theme.primary : theme.buttonBg,
+                borderRadius: 22,
+                paddingHorizontal: 18,
+                paddingVertical: 7,
+                borderWidth: 0,
+                shadowColor: '#000',
+                shadowOpacity: selectedFilter === filter ? 0.08 : 0,
+                shadowRadius: 4,
+                marginRight: 8,
+              }}
+              onPress={() => setSelectedFilter(filter)}
+              activeOpacity={0.85}
+            >
+              <Text style={{ color: selectedFilter === filter ? '#fff' : theme.primary, fontWeight: '600', fontSize: 14 }}>
+                {filter}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
       <FlatList
-        data={conversations}
+        data={filteredConversations}
         renderItem={renderConversation}
         keyExtractor={(item) => item.id.toString()}
         style={styles.conversationsList}
         contentContainerStyle={styles.conversationsContent}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
     </SafeAreaView>
@@ -298,54 +387,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9ff',
   },
   
-  // Enhanced Header Styles
-  headerGradient: {
-    paddingBottom: 30,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  headerIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#fff',
-    marginBottom: 2,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontWeight: '500',
-  },
-  exportButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
   // Search Styles
   searchContainer: {
     marginBottom: 20,
@@ -425,168 +466,201 @@ const styles = StyleSheet.create({
   },
 
   // Conversation Header
-  conversationHeader: {
+  conversationHeaderRedesigned: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
+    backgroundColor: '#f8fafd',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    gap: 12,
+    flexWrap: 'wrap',
   },
-  callInfo: {
-    marginBottom: 8,
+  headerLeftCol: {
+    flex: 1.5,
+    minWidth: 0,
+    marginRight: 10,
   },
-  callIdContainer: {
+  callIdPhoneRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
-  },
-  callId: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#4F83FF',
-    marginLeft: 6,
-  },
-  phoneNumber: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
-  },
-  customerInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  customerName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1a1a1a',
-    marginRight: 12,
-  },
-  orderInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f0fdf4',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  orderTotal: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#10B981',
-    marginLeft: 4,
-  },
-  headerRight: {
-    alignItems: 'flex-end',
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginBottom: 8,
-  },
-  completedBadge: {
-    backgroundColor: '#f0fdf4',
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#10B981',
-    marginLeft: 4,
-  },
-  callDate: {
-    fontSize: 12,
-    color: '#666',
     marginBottom: 2,
   },
-  duration: {
-    fontSize: 12,
-    color: '#999',
+  callIdRedesigned: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#4F83FF',
+    marginRight: 8,
+    flexShrink: 0,
+  },
+  phoneNumberRedesigned: {
+    fontSize: 15,
+    color: '#666',
     fontWeight: '500',
+    marginBottom: 6,
+    flexShrink: 1,
+    flexWrap: 'wrap',
+  },
+  customerNameOrderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginTop: 2,
+    gap: 8,
+  },
+  customerNameRedesigned: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#1a1a1a',
+    flexShrink: 1,
+    flexWrap: 'wrap',
+    maxWidth: '70%',
+  },
+  orderInfoRedesigned: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0fdf4',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginLeft: 4,
+  },
+  orderTotalRedesigned: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#10B981',
+    marginLeft: 4,
+  },
+  headerRightCol: {
+    flex: 1,
+    alignItems: 'flex-end',
+    minWidth: 80,
+    gap: 2,
+  },
+  callDateRedesigned: {
+    fontSize: 13,
+    color: '#888',
+    marginTop: 2,
+    marginBottom: 0,
+    fontWeight: '500',
+    textAlign: 'right',
+  },
+  durationRedesigned: {
+    fontSize: 13,
+    color: '#bbb',
+    fontWeight: '500',
+    textAlign: 'right',
+    marginTop: 0,
   },
 
   // Messages Container
-  messagesContainer: {
-    padding: 20,
+  messagesContainerRedesigned: {
+    paddingHorizontal: 12,
+    paddingVertical: 18,
+    backgroundColor: '#f6f8fa',
+    borderRadius: 14,
+    margin: 12,
+    marginTop: 0,
   },
-  messageRow: {
+  messageRowRedesigned: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 16,
+    alignItems: 'flex-end',
+    marginBottom: 18,
+    minHeight: 44,
   },
-  messageAvatar: {
-    marginRight: 12,
+  messageRowAI: {
+    justifyContent: 'flex-start',
   },
-  aiAvatar: {
+  messageRowCustomer: {
+    flexDirection: 'row-reverse',
+    justifyContent: 'flex-end',
+  },
+  messageAvatarRedesigned: {
     width: 36,
     height: 36,
-  },
-  aiAvatarGradient: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginHorizontal: 4,
   },
-  customerAvatar: {
-    width: 36,
-    height: 36,
+  messageContentRedesigned: {
+    maxWidth: '80%',
+    flexShrink: 1,
   },
-  customerAvatarCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#f0fdf4',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  // Message Content
-  messageContent: {
-    flex: 1,
-  },
-  messageHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  messageSender: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#666',
-  },
-  messageTime: {
-    fontSize: 11,
-    color: '#999',
-  },
-  messageBubble: {
+  messageBubbleRedesigned: {
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    maxWidth: '90%',
+    marginBottom: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  aiBubble: {
+  aiBubbleRedesigned: {
     backgroundColor: '#667eea',
     borderBottomLeftRadius: 4,
+    alignSelf: 'flex-start',
   },
-  customerBubble: {
-    backgroundColor: '#f8f9fa',
+  customerBubbleRedesigned: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
     borderBottomRightRadius: 4,
     alignSelf: 'flex-end',
   },
-  messageText: {
+  messageTextRedesigned: {
+    fontSize: 15,
+    lineHeight: 21,
+  },
+  messageSenderRedesigned: {
+    fontSize: 12,
+    color: '#888',
+    fontWeight: '500',
+    marginRight: 8,
+  },
+  messageTimeRedesigned: {
+    fontSize: 11,
+    color: '#bbb',
+    fontWeight: '400',
+  },
+  messageMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+    marginBottom: 2,
+    gap: 8,
+  },
+  transcriptRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 12,
+    marginBottom: 10,
+    shadowColor: '#667eea',
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    maxWidth: screenWidth - 24,
+    flexWrap: 'wrap',
+    overflow: 'hidden',
+  },
+  amountTag: {
+    backgroundColor: '#f0fdf4',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginLeft: 8,
+    alignSelf: 'flex-end',
+    maxWidth: 80,
+  },
+  amountText: {
+    color: '#10B981',
+    fontWeight: '700',
     fontSize: 14,
-    lineHeight: 20,
-  },
-  aiMessageText: {
-    color: '#fff',
-  },
-  customerMessageText: {
-    color: '#333',
   },
 });
 

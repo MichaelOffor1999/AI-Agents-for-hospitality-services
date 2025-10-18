@@ -18,6 +18,7 @@ const initialState = {
     orderStatus: 'all',
     orderType: 'all',
   },
+  darkMode: false, // NEW
 };
 
 // Action types
@@ -37,6 +38,7 @@ export const ActionTypes = {
   SET_FILTERS: 'SET_FILTERS',
   CLEAR_ERROR: 'CLEAR_ERROR',
   LOGOUT: 'LOGOUT',
+  SET_DARK_MODE: 'SET_DARK_MODE', // NEW
 };
 
 // Reducer
@@ -97,6 +99,9 @@ const appReducer = (state, action) => {
     case ActionTypes.LOGOUT:
       return { ...initialState };
     
+    case ActionTypes.SET_DARK_MODE:
+      return { ...state, darkMode: action.payload };
+    
     default:
       return state;
   }
@@ -109,6 +114,33 @@ export const AppContext = createContext();
 export const AppProvider = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
+  // Provide a mock tenant and mock data if nothing is found
+  const mockTenant = {
+    id: 'mock-tenant',
+    name: 'Demo Restaurant',
+    address: '123 Demo St',
+    phone: '555-1234',
+    email: 'demo@restaurant.com',
+  };
+  const mockDashboardStats = {
+    todaysRevenue: 1250.50,
+    ordersToday: 82,
+    avgOrderValue: 15.25,
+    missedCalls: 5,
+    revenueGrowth: 5.2,
+    ordersGrowth: 8.0,
+    avgOrderGrowth: -1.5,
+    missedCallsGrowth: 10,
+    revenueByDay: [450, 680, 520, 480, 780, 320, 620, 890, 445, 667, 523, 789, 445, 1250],
+    dailyTotals: [
+      { date: 'Oct 26, 2023', orders: 22, gross: 450.50, refunds: 0, net: 450.50 },
+      { date: 'Oct 25, 2023', orders: 18, gross: 380.20, refunds: 15, net: 365.20 },
+      { date: 'Oct 24, 2023', orders: 25, gross: 512.80, refunds: 0, net: 512.80 },
+      { date: 'Oct 23, 2023', orders: 20, gross: 410.00, refunds: 25.50, net: 384.50 },
+      { date: 'Oct 22, 2023', orders: 30, gross: 620.00, refunds: 0, net: 620.00 },
+    ],
+  };
+
   // Initialize app
   useEffect(() => {
     initializeApp();
@@ -117,18 +149,25 @@ export const AppProvider = ({ children }) => {
   const initializeApp = async () => {
     try {
       dispatch({ type: ActionTypes.SET_LOADING, payload: true });
-      
       // Check for stored auth token
       const token = await AsyncStorage.getItem('auth_token');
       if (token) {
         await ApiService.setAuthToken(token);
         dispatch({ type: ActionTypes.SET_AUTHENTICATED, payload: true });
-        
         // Load tenant data
         const tenantId = await AsyncStorage.getItem('tenant_id');
         if (tenantId) {
           await loadTenant(tenantId);
         }
+      } else {
+        // No token/tenant: set mock tenant and mock dashboard data
+        dispatch({ type: ActionTypes.SET_TENANT, payload: mockTenant });
+        dispatch({ type: ActionTypes.SET_DASHBOARD_STATS, payload: mockDashboardStats });
+      }
+      // Load dark mode from storage
+      const storedDarkMode = await AsyncStorage.getItem('dark_mode');
+      if (storedDarkMode !== null) {
+        dispatch({ type: ActionTypes.SET_DARK_MODE, payload: storedDarkMode === 'true' });
       }
     } catch (error) {
       dispatch({ type: ActionTypes.SET_ERROR, payload: error.message });
@@ -267,6 +306,15 @@ export const AppProvider = ({ children }) => {
     dispatch({ type: ActionTypes.CLEAR_ERROR });
   };
 
+  const toggleDarkMode = async (value) => {
+    try {
+      await AsyncStorage.setItem('dark_mode', value ? 'true' : 'false');
+      dispatch({ type: ActionTypes.SET_DARK_MODE, payload: value });
+    } catch (error) {
+      dispatch({ type: ActionTypes.SET_ERROR, payload: error.message });
+    }
+  };
+
   const value = {
     ...state,
     // Actions
@@ -281,6 +329,7 @@ export const AppProvider = ({ children }) => {
     updateMenuItem,
     setFilters,
     clearError,
+    toggleDarkMode, // NEW
   };
 
   return (

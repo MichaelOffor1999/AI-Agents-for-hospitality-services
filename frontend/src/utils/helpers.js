@@ -87,7 +87,7 @@ export const calculateGrowth = (current, previous) => {
 
 export const formatGrowth = (growth) => {
   if (growth === 0) return '0%';
-  
+  if (growth === undefined || growth === null || isNaN(growth)) return '0%';
   const sign = growth > 0 ? '+' : '';
   return `${sign}${growth.toFixed(1)}%`;
 };

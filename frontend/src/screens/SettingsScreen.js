@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useApp } from '../context/AppContext';
+import { useTheme } from '../utils/theme';
 
 const SettingsScreen = ({ navigation }) => {
   const [retentionModalVisible, setRetentionModalVisible] = useState(false);
@@ -25,12 +27,8 @@ const SettingsScreen = ({ navigation }) => {
     systemUpdates: true,
   });
   
-  const [preferences, setPreferences] = useState({
-    darkMode: false,
-    autoBackup: true,
-    soundEnabled: true,
-    vibrationEnabled: true,
-  });
+  const { darkMode, toggleDarkMode } = useApp();
+  const theme = useTheme();
   
   const [openingHours, setOpeningHours] = useState({
     Monday: { open: '09:00', close: '22:00', closed: false },
@@ -105,7 +103,7 @@ const SettingsScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}> 
       {/* Beautiful Gradient Header */}
       <LinearGradient
         colors={['#667EEA', '#764BA2', '#667EEA']}
@@ -218,32 +216,19 @@ const SettingsScreen = ({ navigation }) => {
             </View>
           </View>
           
-          {Object.entries(preferences).map(([key, value]) => (
-            <View key={key} style={styles.settingRow}>
-              <View style={styles.settingLeft}>
-                <Text style={styles.settingLabel}>
-                  {key === 'darkMode' && 'Dark Mode'}
-                  {key === 'autoBackup' && 'Auto Backup'}
-                  {key === 'soundEnabled' && 'Sound Effects'}
-                  {key === 'vibrationEnabled' && 'Haptic Feedback'}
-                </Text>
-                <Text style={styles.settingDescription}>
-                  {key === 'darkMode' && 'Use dark theme throughout the app'}
-                  {key === 'autoBackup' && 'Automatically backup your data'}
-                  {key === 'soundEnabled' && 'Play sounds for notifications'}
-                  {key === 'vibrationEnabled' && 'Vibrate for important alerts'}
-                </Text>
-              </View>
-              <Switch
-                value={value}
-                onValueChange={(newValue) => 
-                  setPreferences(prev => ({ ...prev, [key]: newValue }))
-                }
-                trackColor={{ false: '#E5E7EB', true: '#8B5CF6' }}
-                thumbColor={value ? '#fff' : '#f4f3f4'}
-              />
+          {/* Dark Mode Toggle */}
+          <View style={styles.settingRow}>
+            <View style={styles.settingLeft}>
+              <Text style={styles.settingLabel}>Dark Mode</Text>
+              <Text style={styles.settingDescription}>Use dark theme throughout the app</Text>
             </View>
-          ))}
+            <Switch
+              value={darkMode}
+              onValueChange={toggleDarkMode}
+              trackColor={{ false: '#E5E7EB', true: theme.primary }}
+              thumbColor={darkMode ? '#fff' : '#f4f3f4'}
+            />
+          </View>
         </View>
 
         {/* Data Management Section */}

@@ -8,10 +8,12 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../utils/theme';
 
 const OrderDetailsScreen = ({ route, navigation }) => {
   const { orderId } = route.params || {};
-  
+  const theme = useTheme();
+
   const orderDetails = {
     id: '12345',
     date: '12/03/2024 18:30',
@@ -41,77 +43,81 @@ const OrderDetailsScreen = ({ route, navigation }) => {
     },
   };
 
+  // Glassmorphism style for cards/sections
+  const glassStyle = {
+    backgroundColor: theme.cardGlass,
+    borderRadius: 16,
+    shadowColor: theme.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: theme.border,
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}> 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Order Header */}
         <View style={styles.orderHeader}>
-          <Text style={styles.orderId}>Order #{orderDetails.id}</Text>
-          <View style={styles.statusBadge}>
-            <Text style={styles.statusText}>{orderDetails.status}</Text>
+          <Text style={[styles.orderId, { color: theme.textStrong }]}>Order #{orderDetails.id}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: theme.statusBg }]}> 
+            <Text style={[styles.statusText, { color: '#fff' }]}>{orderDetails.status}</Text>
           </View>
         </View>
-        
-        <Text style={styles.orderDate}>{orderDetails.date}</Text>
-
+        <Text style={[styles.orderDate, { color: theme.textDim }]}>{orderDetails.date}</Text>
         {/* Customer Info */}
-        <View style={styles.section}>
+        <View style={[styles.section, glassStyle]}>
           <View style={styles.customerInfo}>
             <View style={styles.customerDetails}>
-              <Text style={styles.customerName}>{orderDetails.customer.name}</Text>
-              <Text style={styles.customerType}>{orderDetails.customer.type}</Text>
-              <Text style={styles.customerPhone}>{orderDetails.customer.phone}</Text>
+              <Text style={[styles.customerName, { color: theme.textStrong }]}>{orderDetails.customer.name}</Text>
+              <Text style={[styles.customerType, { color: theme.textDim }]}>{orderDetails.customer.type}</Text>
+              <Text style={[styles.customerPhone, { color: theme.textDim }]}>{orderDetails.customer.phone}</Text>
             </View>
-            <TouchableOpacity style={styles.phoneButton}>
-              <Ionicons name="call" size={20} color="#fff" />
+            <TouchableOpacity style={[styles.phoneButton, { backgroundColor: theme.primary }]}> 
+              <Ionicons name="call" size={20} color={theme.iconOnAccent} />
             </TouchableOpacity>
           </View>
         </View>
-
         {/* Order Items */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Order Items</Text>
-          
+        <View style={[styles.section, glassStyle]}>
+          <Text style={[styles.sectionTitle, { color: theme.textStrong }]}>Order Items</Text>
           {orderDetails.items.map((item, index) => (
             <View key={index} style={styles.orderItem}>
               <View style={styles.itemInfo}>
-                <Text style={styles.itemName}>{item.quantity}x {item.name}</Text>
+                <Text style={[styles.itemName, { color: theme.textStrong }]}>{item.quantity}x {item.name}</Text>
                 {item.notes && (
-                  <Text style={styles.itemNotes}>Notes: {item.notes}</Text>
+                  <Text style={[styles.itemNotes, { color: theme.textDim }]}>Notes: {item.notes}</Text>
                 )}
               </View>
-              <Text style={styles.itemPrice}>€{item.price.toFixed(2)}</Text>
+              <Text style={[styles.itemPrice, { color: theme.textStrong }]}>€{item.price.toFixed(2)}</Text>
             </View>
           ))}
-
-          <View style={styles.totalSection}>
-            <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalAmount}>€{orderDetails.total.toFixed(2)}</Text>
+          <View style={[styles.totalSection, { borderTopColor: theme.border }]}>
+            <Text style={[styles.totalLabel, { color: theme.textStrong }]}>Total</Text>
+            <Text style={[styles.totalAmount, { color: theme.primary }]}>€{orderDetails.total.toFixed(2)}</Text>
           </View>
         </View>
-
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.downloadButton}>
-            <Text style={styles.downloadButtonText}>Download Kitchen Receipt (PDF)</Text>
+          <TouchableOpacity style={[styles.downloadButton, { backgroundColor: theme.primary }]}> 
+            <Text style={[styles.downloadButtonText, { color: theme.buttonText }]}>Download Kitchen Receipt (PDF)</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.reprintButton}>
-            <Text style={styles.reprintButtonText}>Reprint</Text>
+          <TouchableOpacity style={[styles.reprintButton, { backgroundColor: theme.buttonBg }]}> 
+            <Text style={[styles.reprintButtonText, { color: theme.textDim }]}>Reprint</Text>
           </TouchableOpacity>
         </View>
-
         {/* Transcript Preview */}
-        <View style={styles.transcriptSection}>
-          <Text style={styles.transcriptTitle}>Transcript Preview</Text>
-          <Text style={styles.transcriptText}>{orderDetails.transcript.preview}</Text>
-          
+        <View style={[styles.transcriptSection, glassStyle]}>
+          <Text style={[styles.transcriptTitle, { color: theme.textStrong }]}>Transcript Preview</Text>
+          <Text style={[styles.transcriptText, { color: theme.textDim }]}>{orderDetails.transcript.preview}</Text>
           <TouchableOpacity 
             style={styles.fullTranscriptButton}
-            onPress={() => navigation.navigate('Transcripts')}
+            onPress={() => navigation.navigate('Transcripts', { orderId: orderDetails.id })}
           >
-            <Text style={styles.fullTranscriptText}>View Full Transcript</Text>
-            <Ionicons name="arrow-forward" size={16} color="#4F83FF" />
+            <Text style={[styles.fullTranscriptText, { color: theme.primary }]}>View Full Transcript</Text>
+            <Ionicons name="arrow-forward" size={16} color={theme.primary} />
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -122,7 +128,6 @@ const OrderDetailsScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   orderHeader: {
     flexDirection: 'row',
@@ -135,36 +140,26 @@ const styles = StyleSheet.create({
   orderId: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#000',
   },
   statusBadge: {
-    backgroundColor: '#D1FAE5',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
   },
   statusText: {
-    color: '#065F46',
     fontSize: 12,
     fontWeight: '600',
   },
   orderDate: {
     fontSize: 14,
-    color: '#6B7280',
     paddingHorizontal: 20,
     marginBottom: 20,
   },
   section: {
-    backgroundColor: '#fff',
     marginHorizontal: 20,
     marginBottom: 15,
     borderRadius: 12,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
   customerInfo: {
     flexDirection: 'row',
@@ -177,20 +172,16 @@ const styles = StyleSheet.create({
   customerName: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 4,
   },
   customerType: {
     fontSize: 14,
-    color: '#6B7280',
     marginBottom: 4,
   },
   customerPhone: {
     fontSize: 14,
-    color: '#6B7280',
   },
   phoneButton: {
-    backgroundColor: '#4F83FF',
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -200,7 +191,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 15,
   },
   orderItem: {
@@ -215,18 +205,15 @@ const styles = StyleSheet.create({
   itemName: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#000',
     marginBottom: 2,
   },
   itemNotes: {
     fontSize: 12,
-    color: '#6B7280',
     fontStyle: 'italic',
   },
   itemPrice: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000',
   },
   totalSection: {
     flexDirection: 'row',
@@ -234,67 +221,52 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 15,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
     marginTop: 15,
   },
   totalLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
   },
   totalAmount: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#4F83FF',
   },
   actionButtons: {
     paddingHorizontal: 20,
     marginBottom: 15,
   },
   downloadButton: {
-    backgroundColor: '#4F83FF',
     borderRadius: 12,
     paddingVertical: 15,
     alignItems: 'center',
     marginBottom: 10,
   },
   downloadButtonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
   reprintButton: {
-    backgroundColor: '#E5E7EB',
     borderRadius: 12,
     paddingVertical: 15,
     alignItems: 'center',
   },
   reprintButtonText: {
-    color: '#374151',
     fontSize: 16,
     fontWeight: '600',
   },
   transcriptSection: {
-    backgroundColor: '#fff',
     marginHorizontal: 20,
     marginBottom: 20,
     borderRadius: 12,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
   transcriptTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 12,
   },
   transcriptText: {
     fontSize: 14,
-    color: '#6B7280',
     fontStyle: 'italic',
     lineHeight: 20,
     marginBottom: 15,
@@ -306,7 +278,6 @@ const styles = StyleSheet.create({
   },
   fullTranscriptText: {
     fontSize: 14,
-    color: '#4F83FF',
     fontWeight: '500',
     marginRight: 5,
   },

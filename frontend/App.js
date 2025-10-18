@@ -1,106 +1,44 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { AppProvider } from './src/context/AppContext';
 import ErrorBoundary from './src/components/ErrorBoundary';
+import MainStack from './src/navigation/MainStack';
+import { View, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-// Import screens
-import DashboardScreen from './src/screens/DashboardScreen';
-import OrdersScreen from './src/screens/OrdersScreen';
-import OrderDetailsScreen from './src/screens/OrderDetailsScreen';
-import TranscriptsScreen from './src/screens/TranscriptsScreen';
-import MenuManagementScreen from './src/screens/MenuManagementScreen';
-import SettingsScreen from './src/screens/SettingsScreen';
-import BusinessProfileScreen from './src/screens/BusinessProfileScreenSimple';
-import AIVoiceSettingsScreen from './src/screens/AIVoiceSettingsScreen';
-
-const Tab = createBottomTabNavigator();
-const Stack = createNativeStackNavigator();
-
-function MainTabs() {
+function FallbackUI({ error }) {
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-
-          if (route.name === 'Dashboard') {
-            iconName = focused ? 'analytics' : 'analytics-outline';
-          } else if (route.name === 'Orders') {
-            iconName = focused ? 'list' : 'list-outline';
-          } else if (route.name === 'Menu') {
-            iconName = focused ? 'restaurant' : 'restaurant-outline';
-          } else if (route.name === 'Settings') {
-            iconName = focused ? 'settings' : 'settings-outline';
-          }
-
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: '#4F83FF',
-        tabBarInactiveTintColor: 'gray',
-        headerShown: false,
-      })}
-    >
-      <Tab.Screen name="Dashboard" component={DashboardScreen} />
-      <Tab.Screen name="Orders" component={OrdersScreen} />
-      <Tab.Screen name="Menu" component={MenuManagementScreen} />
-      <Tab.Screen name="Settings" component={SettingsScreen} />
-    </Tab.Navigator>
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32, backgroundColor: '#fff' }}>
+      <StatusBar style="auto" />
+      <Ionicons name="alert-circle" size={64} color="#EF4444" style={{ marginBottom: 16 }} />
+      <Text style={{ color: '#EF4444', fontWeight: 'bold', fontSize: 22, marginBottom: 8 }}>App Error</Text>
+      <Text style={{ color: '#333', fontSize: 16, marginBottom: 8 }}>{error?.toString() || 'Unknown error occurred.'}</Text>
+      <Text style={{ color: '#666', fontSize: 14, textAlign: 'center' }}>Please check your code or contact support.</Text>
+    </View>
   );
 }
 
 export default function App() {
+  console.log('App component mounted!');
   return (
-    <ErrorBoundary>
+    <ErrorBoundary FallbackComponent={FallbackUI}>
       <AppProvider>
-        <NavigationContainer>
-          <StatusBar style="dark" />
-          <Stack.Navigator>
-            <Stack.Screen 
-              name="MainTabs" 
-              component={MainTabs} 
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen 
-              name="OrderDetails" 
-              component={OrderDetailsScreen}
-              options={{ 
-                title: 'Order Details',
-                headerBackTitle: '',
-                headerTintColor: '#000',
-              }}
-            />
-            <Stack.Screen 
-              name="Transcripts" 
-              component={TranscriptsScreen}
-              options={{ 
-                title: 'Search Transcripts',
-                headerBackTitle: '',
-                headerTintColor: '#000',
-              }}
-            />
-            <Stack.Screen 
-              name="BusinessProfile" 
-              component={BusinessProfileScreen}
-              options={{ 
-                title: 'Business Profile',
-                headerBackTitle: '',
-                headerTintColor: '#000',
-              }}
-            />
-            <Stack.Screen 
-              name="AIVoiceSettings" 
-              component={AIVoiceSettingsScreen}
-              options={{ 
-                headerShown: false,
-              }}
-            />
-          </Stack.Navigator>
-        </NavigationContainer>
+        <MainStack />
       </AppProvider>
     </ErrorBoundary>
   );
+}
+
+// --- WEB ROOT FALLBACK: Show a visible error if the app fails to mount ---
+if (typeof document !== 'undefined') {
+  window.addEventListener('error', (e) => {
+    const root = document.getElementById('root');
+    if (root) {
+      root.innerHTML = `<div style="color:#EF4444;font-size:24px;padding:32px;text-align:center;">App failed to mount.<br/>Error: ${e.message || e.toString()}<br/>Check your console for details.</div>`;
+    }
+  });
+  const root = document.getElementById('root');
+  if (root && root.innerHTML.trim() === '') {
+    root.innerHTML = '<div style="color:#EF4444;font-size:24px;padding:32px;text-align:center;">App failed to mount.<br/>Check your console for errors.</div>';
+  }
 }

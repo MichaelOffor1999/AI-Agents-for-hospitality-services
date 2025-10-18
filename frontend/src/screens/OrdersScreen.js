@@ -14,6 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { formatCurrency, formatDate, getStatusIcon, getOrderTypeIcon, debounce } from '../utils/helpers';
+import { useTheme } from '../utils/theme';
 
 const OrdersScreen = ({ navigation }) => {
   const { 
@@ -25,6 +26,7 @@ const OrdersScreen = ({ navigation }) => {
     filters,
     setFilters
   } = useApp();
+  const theme = useTheme();
 
   const [filterVisible, setFilterVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -68,9 +70,9 @@ const OrdersScreen = ({ navigation }) => {
 
   useEffect(() => {
     if (tenant) {
-      loadOrders?.();
+      loadOrders?.(filters);
     }
-  }, [tenant]);
+  }, [tenant, filters]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -123,57 +125,54 @@ const OrdersScreen = ({ navigation }) => {
   });
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}> 
       {/* Header with Search and Filter */}
-      <View style={styles.headerContainer}>
+      <View style={[styles.headerContainer, { backgroundColor: theme.headerGlass, borderBottomColor: theme.border }]}> 
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Orders</Text>
+          <Text style={[styles.headerTitle, { color: theme.textStrong }]}>Orders</Text>
           <TouchableOpacity 
-            style={styles.filterButton}
+            style={[styles.filterButton, { backgroundColor: theme.buttonBg }]}
             onPress={() => setFilterVisible(true)}
           >
-            <Ionicons name="filter" size={20} color="#4F83FF" />
-            <Text style={styles.filterButtonText}>Filter</Text>
+            <Ionicons name="filter" size={20} color={theme.primary} />
+            <Text style={[styles.filterButtonText, { color: theme.primary }]}>Filter</Text>
           </TouchableOpacity>
         </View>
-        
         {/* Compact Search Bar */}
         <View style={styles.searchContainer}>
-          <View style={styles.searchBar}>
-            <Ionicons name="search" size={18} color="#9CA3AF" />
+          <View style={[styles.searchBar, { backgroundColor: theme.cardGlass, borderColor: theme.border }]}> 
+            <Ionicons name="search" size={18} color={theme.iconDim} />
             <TextInput
-              style={styles.searchInput}
+              style={[styles.searchInput, { color: theme.textStrong }]}
               placeholder="Search orders..."
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={theme.textDim}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
           </View>
         </View>
-
         {/* Active Filter Indicators */}
         {(filters.orderStatus !== 'all' || filters.orderType !== 'all') && (
           <View style={styles.activeFilters}>
             {filters.orderStatus !== 'all' && (
-              <View style={styles.filterChip}>
-                <Text style={styles.filterChipText}>Status: {filters.orderStatus}</Text>
+              <View style={[styles.filterChip, { backgroundColor: theme.accent }]}> 
+                <Text style={[styles.filterChipText, { color: theme.buttonBg }]}>Status: {filters.orderStatus}</Text>
                 <TouchableOpacity onPress={() => setFilters({ ...filters, orderStatus: 'all' })}>
-                  <Ionicons name="close" size={14} color="#666" />
+                  <Ionicons name="close" size={14} color={theme.buttonBg} />
                 </TouchableOpacity>
               </View>
             )}
             {filters.orderType !== 'all' && (
-              <View style={styles.filterChip}>
-                <Text style={styles.filterChipText}>Type: {filters.orderType}</Text>
+              <View style={[styles.filterChip, { backgroundColor: theme.accent }]}> 
+                <Text style={[styles.filterChipText, { color: theme.buttonBg }]}>Type: {filters.orderType}</Text>
                 <TouchableOpacity onPress={() => setFilters({ ...filters, orderType: 'all' })}>
-                  <Ionicons name="close" size={14} color="#666" />
+                  <Ionicons name="close" size={14} color={theme.buttonBg} />
                 </TouchableOpacity>
               </View>
             )}
           </View>
         )}
       </View>
-
       {/* Filter Modal */}
       <Modal
         visible={filterVisible}
@@ -182,21 +181,24 @@ const OrdersScreen = ({ navigation }) => {
         onRequestClose={() => setFilterVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.filterModal}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Filter Orders</Text>
+          <View style={[styles.filterModal, { backgroundColor: theme.cardGlass }]}> 
+            <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}> 
+              <Text style={[styles.modalTitle, { color: theme.textStrong }]}>Filter Orders</Text>
               <TouchableOpacity 
                 onPress={() => setFilterVisible(false)}
                 style={styles.closeButton}
               >
-                <Ionicons name="close" size={24} color="#666" />
+                <Ionicons name="close" size={24} color={theme.textDim} />
               </TouchableOpacity>
             </View>
-
-            <ScrollView style={styles.modalContent}>
+            <ScrollView 
+              style={styles.modalContent} 
+              contentContainerStyle={{ flexGrow: 1 }} 
+              keyboardShouldPersistTaps="handled"
+            >
               {/* Status Filter */}
               <View style={styles.filterSection}>
-                <Text style={styles.filterLabel}>Order Status</Text>
+                <Text style={[styles.filterLabel, { color: theme.textStrong }]}>Order Status</Text>
                 <View style={styles.filterOptions}>
                   {[
                     { value: 'all', label: 'All Orders' },
@@ -212,18 +214,17 @@ const OrdersScreen = ({ navigation }) => {
                       style={styles.filterOption}
                       onPress={() => setFilters({ ...filters, orderStatus: status.value })}
                     >
-                      <View style={[styles.radio, filters.orderStatus === status.value && styles.radioSelected]} />
-                      <Text style={[styles.filterOptionText, filters.orderStatus === status.value && styles.filterOptionSelected]}>
+                      <View style={[styles.radio, { borderColor: theme.border }, filters.orderStatus === status.value && { borderColor: theme.primary, backgroundColor: theme.primary }]} />
+                      <Text style={[styles.filterOptionText, { color: theme.textDim }, filters.orderStatus === status.value && { color: theme.primary, fontWeight: '500' }]}>
                         {status.label}
                       </Text>
                     </TouchableOpacity>
                   ))}
                 </View>
               </View>
-
               {/* Type Filter */}
               <View style={styles.filterSection}>
-                <Text style={styles.filterLabel}>Order Type</Text>
+                <Text style={[styles.filterLabel, { color: theme.textStrong }]}>Order Type</Text>
                 <View style={styles.filterOptions}>
                   {[
                     { value: 'all', label: 'All Types' },
@@ -236,8 +237,8 @@ const OrdersScreen = ({ navigation }) => {
                       style={styles.filterOption}
                       onPress={() => setFilters({ ...filters, orderType: type.value })}
                     >
-                      <View style={[styles.radio, filters.orderType === type.value && styles.radioSelected]} />
-                      <Text style={[styles.filterOptionText, filters.orderType === type.value && styles.filterOptionSelected]}>
+                      <View style={[styles.radio, { borderColor: theme.border }, filters.orderType === type.value && { borderColor: theme.primary, backgroundColor: theme.primary }]} />
+                      <Text style={[styles.filterOptionText, { color: theme.textDim }, filters.orderType === type.value && { color: theme.primary, fontWeight: '500' }]}>
                         {type.label}
                       </Text>
                     </TouchableOpacity>
@@ -245,25 +246,23 @@ const OrdersScreen = ({ navigation }) => {
                 </View>
               </View>
             </ScrollView>
-
-            <View style={styles.modalActions}>
+            <View style={[styles.modalActions, { borderTopColor: theme.border }]}> 
               <TouchableOpacity 
-                style={styles.resetButton}
+                style={[styles.resetButton, { backgroundColor: theme.buttonBg }]}
                 onPress={() => setFilters({ orderStatus: 'all', orderType: 'all' })}
               >
-                <Text style={styles.resetButtonText}>Reset</Text>
+                <Text style={[styles.resetButtonText, { color: theme.textDim }]}>Reset</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={styles.applyButton}
+                style={[styles.applyButton, { backgroundColor: theme.primary }]}
                 onPress={() => setFilterVisible(false)}
               >
-                <Text style={styles.applyButtonText}>Apply</Text>
+                <Text style={[styles.applyButtonText, { color: theme.buttonBg }]}>Apply</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
-
       {/* Orders List */}
       <ScrollView 
         style={styles.ordersList}
@@ -272,39 +271,37 @@ const OrdersScreen = ({ navigation }) => {
         }
       >
         {filteredOrders.map((order) => (
-          <View key={order.id} style={styles.orderCard}>
+          <View key={order.id} style={[styles.orderCard, { backgroundColor: theme.cardGlass, shadowColor: theme.shadow }]}> 
             <View style={styles.orderHeader}>
               <View>
-                <Text style={styles.orderTime}>Time</Text>
-                <Text style={styles.orderTimeValue}>{formatDate(order.createdAt, 'time')}</Text>
+                <Text style={[styles.orderTime, { color: theme.textDim }]}>Time</Text>
+                <Text style={[styles.orderTimeValue, { color: theme.textStrong }]}>{formatDate(order.createdAt, 'time')}</Text>
               </View>
               <View style={styles.orderRight}>
-                <Text style={styles.orderCustomer}>Customer</Text>
-                <Text style={styles.orderCustomerValue}>{order.customerName}</Text>
+                <Text style={[styles.orderCustomer, { color: theme.textDim }]}>Customer</Text>
+                <Text style={[styles.orderCustomerValue, { color: theme.textStrong }]}>{order.customerName}</Text>
               </View>
             </View>
-
             <View style={styles.orderDetails}>
               <View>
-                <Text style={styles.orderLabel}>Items</Text>
-                <Text style={styles.orderValue}>{order.items?.length || 0} items</Text>
+                <Text style={[styles.orderLabel, { color: theme.textDim }]}>Items</Text>
+                <Text style={[styles.orderValue, { color: theme.textStrong }]}>{order.items?.length || 0} items</Text>
               </View>
               <View style={styles.orderRight}>
-                <Text style={styles.orderLabel}>Total</Text>
-                <Text style={styles.orderValue}>{formatCurrency(order.total)}</Text>
+                <Text style={[styles.orderLabel, { color: theme.textDim }]}>Total</Text>
+                <Text style={[styles.orderValue, { color: theme.textStrong }]}>{formatCurrency(order.total)}</Text>
               </View>
             </View>
-
             <View style={styles.orderFooter}>
               <View>
-                <Text style={styles.orderLabel}>Type</Text>
-                <View style={[styles.typeBadge, { backgroundColor: getTypeColor(order.type) }]}>
+                <Text style={[styles.orderLabel, { color: theme.textDim }]}>Type</Text>
+                <View style={[styles.typeBadge, { backgroundColor: getTypeColor(order.type) }]}> 
                   <Ionicons name={getOrderTypeIcon(order.type)} size={12} color="#fff" />
                   <Text style={styles.typeBadgeText}>{order.type}</Text>
                 </View>
               </View>
               <View style={styles.orderRight}>
-                <Text style={styles.orderLabel}>Status</Text>
+                <Text style={[styles.orderLabel, { color: theme.textDim }]}>Status</Text>
                 <TouchableOpacity 
                   style={[styles.statusBadge, { backgroundColor: getStatusColor(order.status) }]}
                   onPress={() => {
@@ -327,31 +324,29 @@ const OrdersScreen = ({ navigation }) => {
                 </TouchableOpacity>
               </View>
             </View>
-
             <View style={styles.orderActions}>
               <TouchableOpacity 
-                style={styles.viewButton}
+                style={[styles.viewButton, { backgroundColor: theme.primary }]}
                 onPress={() => navigation.navigate('OrderDetails', { orderId: order.id, order })}
               >
-                <Text style={styles.viewButtonText}>View Details</Text>
+                <Text style={[styles.viewButtonText, { color: theme.buttonBg }]}>View Details</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={styles.downloadButton}
+                style={[styles.downloadButton, { backgroundColor: theme.buttonBg }]}
                 onPress={() => {
                   Alert.alert('Receipt', 'Kitchen receipt downloaded successfully');
                 }}
               >
-                <Ionicons name="download-outline" size={20} color="#666" />
+                <Ionicons name="download-outline" size={20} color={theme.iconDim} />
               </TouchableOpacity>
             </View>
           </View>
         ))}
-        
         {filteredOrders.length === 0 && (
           <View style={styles.emptyState}>
-            <Ionicons name="receipt-outline" size={64} color="#9CA3AF" />
-            <Text style={styles.emptyStateTitle}>No orders found</Text>
-            <Text style={styles.emptyStateMessage}>
+            <Ionicons name="receipt-outline" size={64} color={theme.iconDim} />
+            <Text style={[styles.emptyStateTitle, { color: theme.textStrong }]}>No orders found</Text>
+            <Text style={[styles.emptyStateMessage, { color: theme.textDim }]}>
               {searchQuery || filters.orderStatus !== 'all' || filters.orderType !== 'all'
                 ? 'Try adjusting your search or filters'
                 : 'Orders will appear here when customers place them'
@@ -450,7 +445,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '80%',
+    height: '80%', // was maxHeight, now fixed height for consistency
   },
   modalHeader: {
     flexDirection: 'row',
@@ -469,7 +464,7 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   modalContent: {
-    flex: 1,
+    flexGrow: 1, // allow ScrollView to expand
     padding: 20,
   },
   filterSection: {
