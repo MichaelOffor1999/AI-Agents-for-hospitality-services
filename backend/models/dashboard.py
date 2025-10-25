@@ -9,6 +9,8 @@ class DailyTotal(BaseModel):
     net: float
 
 class DashboardStats(BaseModel):
+    user_id: str  # ID of the account (owner/staff) that owns this dashboard
+    restaurant_id: str  # ID of the restaurant for which these stats apply
     todaysRevenue: float
     ordersToday: int
     avgOrderValue: float

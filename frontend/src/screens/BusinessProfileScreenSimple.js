@@ -107,6 +107,23 @@ const BusinessProfileScreen = () => {
     }
   ]);
 
+  // Load existing tenant data when component mounts
+  useEffect(() => {
+    if (tenant) {
+      console.log('Loading tenant data:', tenant);
+      setProfile(prev => ({
+        ...prev,
+        name: tenant.name || prev.name,
+        phone: tenant.phone || prev.phone,
+        address: tenant.address || prev.address,
+      }));
+      
+      if (tenant.hours) {
+        setBusinessHours(tenant.hours);
+      }
+    }
+  }, [tenant]);
+
   const updateProfile = (field, value) => {
     setProfile(prev => ({ ...prev, [field]: value }));
   };
@@ -160,25 +177,37 @@ const BusinessProfileScreen = () => {
     try {
       setSaving(true);
       
-      // Mock save - in real app would call API
       console.log('Saving business profile...', { profile, businessHours, additionalInfo });
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Update the app context
-      updateTenant({
-        ...tenant,
+      // Prepare restaurant data for backend
+      const restaurantData = {
         name: profile.name,
         phone: profile.phone,
         address: profile.address,
-      });
+        hours: businessHours,
+      };
+      
+      let savedRestaurant;
+      
+      // If tenant exists, update; otherwise, create new restaurant
+      if (tenant && tenant.id) {
+        console.log('Updating existing restaurant:', tenant.id);
+        savedRestaurant = await ApiService.updateRestaurant(tenant.id, restaurantData);
+      } else {
+        console.log('Creating new restaurant');
+        savedRestaurant = await ApiService.createRestaurant(restaurantData);
+      }
+      
+      console.log('Restaurant saved:', savedRestaurant);
+      
+      // Update the app context with the new/updated restaurant
+      await updateTenant(savedRestaurant);
       
       Alert.alert('Success', 'Business profile updated successfully!');
       
     } catch (error) {
       console.error('Error saving business data:', error);
-      Alert.alert('Error', 'Failed to save changes. Please try again.');
+      Alert.alert('Error', `Failed to save changes: ${error.message || 'Please try again.'}`);
     } finally {
       setSaving(false);
     }
@@ -867,7 +896,9 @@ const BusinessProfileScreen = () => {
       </View>
 
       <ScrollView 
-        showsVerticalScrollIndicator={false} 
+        showsVerticalScrollIndicator={true}
+        bounces={true}
+        alwaysBounceVertical={true}
         style={styles.contentScroll}
         contentContainerStyle={styles.contentContainer}
       >
@@ -1041,10 +1072,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    paddingBottom: 20,
+    paddingHorizontal: 0,
+    paddingBottom: 120,
   },
   tabContent: {
-    paddingBottom: 20,
+    // Content wrapper for each tab
   },
   
   // Card Styles

@@ -151,16 +151,21 @@ export const AppProvider = ({ children }) => {
       dispatch({ type: ActionTypes.SET_LOADING, payload: true });
       // Check for stored auth token
       const token = await AsyncStorage.getItem('auth_token');
+      console.log('[DEBUG] initializeApp: token from storage:', token);
       if (token) {
         await ApiService.setAuthToken(token);
         dispatch({ type: ActionTypes.SET_AUTHENTICATED, payload: true });
         // Load tenant data
         const tenantId = await AsyncStorage.getItem('tenant_id');
+        console.log('[DEBUG] initializeApp: tenant_id from storage:', tenantId);
         if (tenantId) {
           await loadTenant(tenantId);
+        } else {
+          console.log('[DEBUG] initializeApp: No tenant_id found in storage');
         }
       } else {
         // No token/tenant: set mock tenant and mock dashboard data
+        console.log('[DEBUG] initializeApp: No token found, using mock tenant');
         dispatch({ type: ActionTypes.SET_TENANT, payload: mockTenant });
         dispatch({ type: ActionTypes.SET_DASHBOARD_STATS, payload: mockDashboardStats });
       }
@@ -176,19 +181,37 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  const login = async (credentials) => {
+  // Signup function
+  const signup = async (userData) => {
     try {
       dispatch({ type: ActionTypes.SET_LOADING, payload: true });
-      
-      // In a real app, you would call your auth API here
-      const { token, tenant } = credentials; // Mock response
-      
+      // Call backend signup API
+      const response = await ApiService.signup(userData);
+      const { token, tenant } = response;
       await ApiService.setAuthToken(token);
       await AsyncStorage.setItem('tenant_id', tenant.id);
-      
       dispatch({ type: ActionTypes.SET_AUTHENTICATED, payload: true });
       dispatch({ type: ActionTypes.SET_TENANT, payload: new Tenant(tenant) });
-      
+      return true;
+    } catch (error) {
+      dispatch({ type: ActionTypes.SET_ERROR, payload: error.message });
+      return false;
+    } finally {
+      dispatch({ type: ActionTypes.SET_LOADING, payload: false });
+    }
+  };
+
+  const login = async ({ email, password }) => {
+    try {
+      dispatch({ type: ActionTypes.SET_LOADING, payload: true });
+      // Call backend login API
+      const response = await ApiService.login({ email, password });
+      const { access_token, user_id } = response;
+      if (!access_token || !user_id) throw new Error('Invalid login response');
+      await ApiService.setAuthToken(access_token);
+      await AsyncStorage.setItem('tenant_id', user_id);
+      dispatch({ type: ActionTypes.SET_AUTHENTICATED, payload: true });
+      // Optionally, fetch tenant/user details here if needed
       return true;
     } catch (error) {
       dispatch({ type: ActionTypes.SET_ERROR, payload: error.message });
@@ -209,9 +232,12 @@ export const AppProvider = ({ children }) => {
 
   const loadTenant = async (tenantId) => {
     try {
+      console.log('[DEBUG] loadTenant: loading tenant for id:', tenantId);
       const tenantData = await ApiService.getTenant(tenantId);
+      console.log('[DEBUG] loadTenant: tenantData from API:', tenantData);
       dispatch({ type: ActionTypes.SET_TENANT, payload: new Tenant(tenantData) });
     } catch (error) {
+      console.log('[DEBUG] loadTenant: error loading tenant:', error);
       dispatch({ type: ActionTypes.SET_ERROR, payload: error.message });
     }
   };
@@ -319,6 +345,7 @@ export const AppProvider = ({ children }) => {
     ...state,
     // Actions
     login,
+    signup,
     logout,
     updateTenant,
     loadDashboardStats,

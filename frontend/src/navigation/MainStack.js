@@ -9,6 +9,10 @@ import MenuManagementScreen from '../screens/MenuManagementScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import TranscriptsScreen from '../screens/TranscriptsScreen';
 import OrderDetailsScreen from '../screens/OrderDetailsScreen';
+import BusinessProfileScreen from '../screens/BusinessProfileScreenSimple';
+import AIVoiceSettingsScreen from '../screens/AIVoiceSettingsScreen';
+import LoginScreen from '../screens/LoginScreen';
+import SignupScreen from '../screens/SignupScreen';
 import { useApp } from '../context/AppContext';
 
 const Tab = createBottomTabNavigator();
@@ -48,15 +52,25 @@ function MainTabs() {
 }
 
 export default function MainStack() {
-  const { darkMode } = useApp();
-  console.log('MainStack rendering. darkMode:', darkMode);
+  const { darkMode, isAuthenticated } = useApp();
+  console.log('MainStack rendering. darkMode:', darkMode, 'isAuthenticated:', isAuthenticated);
+
   return (
     <NavigationContainer theme={darkMode ? DarkTheme : DefaultTheme}>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="MainTabs" component={MainTabs} />
-        <Stack.Screen name="OrderDetails" component={OrderDetailsScreen} options={{ headerShown: true, title: 'Order Details' }} />
-        <Stack.Screen name="Transcripts" component={TranscriptsScreen} options={{ headerShown: true, title: 'Call Transcripts' }} />
-      </Stack.Navigator>
+      {isAuthenticated ? (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="MainTabs" component={MainTabs} />
+          <Stack.Screen name="OrderDetails" component={OrderDetailsScreen} options={{ headerShown: true, title: 'Order Details' }} />
+          <Stack.Screen name="Transcripts" component={TranscriptsScreen} options={{ headerShown: true, title: 'Call Transcripts' }} />
+          <Stack.Screen name="BusinessProfile" component={BusinessProfileScreen} options={{ headerShown: true, title: 'Business Profile' }} />
+          <Stack.Screen name="AIVoiceSettings" component={AIVoiceSettingsScreen} options={{ headerShown: true, title: 'AI Voice Settings' }} />
+        </Stack.Navigator>
+      ) : (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Signup" component={SignupScreen} />
+        </Stack.Navigator>
+      )}
     </NavigationContainer>
   );
 }

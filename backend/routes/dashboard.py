@@ -1,15 +1,19 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends, HTTPException
 from models.dashboard import DashboardStats, DailyTotal
 from models.order import Order
 from utils.db import db
 from typing import List, Optional
 from datetime import datetime, timedelta
 
+from routes.users import get_current_user
+
 router = APIRouter()
 
 @router.get("/dashboard", response_model=DashboardStats)
 async def get_dashboard_stats(
-    date_range: Optional[str] = Query('week', description="Date range: today, week, month")
+    date_range: Optional[str] = Query('week', description="Date range: today, week, month"),
+    restaurant_id: str = Query(..., description="ID of the restaurant for dashboard stats"),
+    current_user: dict = Depends(get_current_user)
 ):
     # Set date range
     now = datetime.utcnow()
@@ -24,9 +28,15 @@ async def get_dashboard_stats(
         start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
         days = 7
 
-    # Fetch orders in range
+    # Verify restaurant belongs to user
+    restaurant = await db.restaurants.find_one({"_id": restaurant_id, "user_id": str(current_user["_id"])})
+    if not restaurant:
+        raise HTTPException(status_code=403, detail="Not authorized for this restaurant")
+
+    # Fetch orders in range for this restaurant
     orders_cursor = db.orders.find({
-        "timestamp": {"$gte": start_date.isoformat(), "$lte": now.isoformat()}
+        "timestamp": {"$gte": start_date.isoformat(), "$lte": now.isoformat()},
+        "restaurant_id": restaurant_id
     })
     orders = await orders_cursor.to_list(1000)
 
@@ -36,7 +46,6 @@ async def get_dashboard_stats(
     total_revenue = 0.0
     total_orders = 0
     total_order_value = 0.0
-    refunds_by_day = [0.0 for _ in range(days)]
     order_counts_by_day = [0 for _ in range(days)]
 
     for order in orders:
@@ -45,9 +54,7 @@ async def get_dashboard_stats(
         day_index = (order_date.date() - start_date.date()).days
         if 0 <= day_index < days:
             gross = sum(item.get("price", 0) * item.get("qty", 1) for item in order.get("items", []))
-            refund = float(order.get("refund", 0)) if "refund" in order else 0.0
             revenue_by_day[day_index] += gross
-            refunds_by_day[day_index] += refund
             order_counts_by_day[day_index] += 1
             total_revenue += gross
             total_orders += 1
@@ -58,9 +65,7 @@ async def get_dashboard_stats(
         daily_totals.append(DailyTotal(
             date=date_str,
             orders=order_counts_by_day[i],
-            gross=revenue_by_day[i],
-            refunds=refunds_by_day[i],
-            net=revenue_by_day[i] - refunds_by_day[i]
+            gross=revenue_by_day[i]
         ))
 
     todaysRevenue = revenue_by_day[-1] if revenue_by_day else 0.0
@@ -73,6 +78,8 @@ async def get_dashboard_stats(
     avgOrderGrowth = 0.0
 
     return DashboardStats(
+        user_id=str(current_user["_id"]),
+        restaurant_id=restaurant_id,
         todaysRevenue=todaysRevenue,
         ordersToday=ordersToday,
         avgOrderValue=avgOrderValue,

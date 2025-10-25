@@ -20,10 +20,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useApp } from '../context/AppContext';
 import { formatCurrency } from '../utils/helpers';
 import { useTheme } from '../utils/theme';
+import ApiService from '../services/ApiService';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-const MenuManagementScreen = () => {
+const MenuManagementScreen = ({ navigation }) => {
   const theme = useTheme();
   const { menuItems, tenant, loadMenuItems, updateMenuItem, isLoading } = useApp();
   
@@ -166,6 +167,23 @@ const MenuManagementScreen = () => {
     }
   }, [tenant]);
 
+  // Check if user has a business profile, redirect to Settings/Business Profile if not
+  useEffect(() => {
+    if (!tenant && !isLoading) {
+      Alert.alert(
+        'Business Profile Required',
+        'Please set up your business profile before managing your menu.',
+        [
+          {
+            text: 'Set Up Now',
+            onPress: () => navigation.navigate('Settings'),
+          },
+        ],
+        { cancelable: false }
+      );
+    }
+  }, [tenant, isLoading]);
+
   const onRefresh = async () => {
     if (!tenant) return;
     
@@ -225,17 +243,45 @@ const MenuManagementScreen = () => {
   };
 
   const handleSaveItem = async () => {
+    console.log('[DEBUG] Save button pressed');
     if (!newItem.name.trim() || !newItem.price) {
+      console.log('[DEBUG] Validation failed: missing name or price', newItem);
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
 
+    if (!tenant) {
+      console.log('[DEBUG] No tenant object:', tenant);
+      Alert.alert('Error', 'Tenant information missing. Please log in again.');
+      return;
+    }
+    if (!tenant.id) {
+      console.log('[DEBUG] Tenant object has no id:', tenant);
+      Alert.alert('Error', 'Tenant ID missing. Please log in again.');
+      return;
+    }
+
     try {
-      // In a real app, you would call createMenuItem API
+      // Prepare payload (ensure price is a number, dietary is array)
+      const payload = {
+        ...newItem,
+        price: parseFloat(newItem.price),
+        dietary: Array.isArray(newItem.dietary) ? newItem.dietary : [],
+        isPopular: !!newItem.isPopular,
+        prepTime: newItem.prepTime || '',
+        image: newItem.image || '',
+        available: newItem.available !== undefined ? newItem.available : true,
+      };
+      console.log('[DEBUG] Payload to send:', payload);
+      Alert.alert('Debug', 'About to call API. Check Metro logs for payload.');
+      const result = await ApiService.createMenuItem(tenant.id, payload);
+      console.log('[DEBUG] API result:', result);
+      await loadMenuItems();
       Alert.alert('Success', 'Menu item saved successfully');
       setAddItemModalVisible(false);
       setNewItem({ name: '', price: '', category: 'Main', description: '', available: true });
     } catch (error) {
+      console.log('[DEBUG] Error saving menu item:', error);
       Alert.alert('Error', 'Failed to save menu item');
     }
   };
@@ -401,6 +447,29 @@ const MenuManagementScreen = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}> {/* Use theme.bg */}
+      {/* Show message if no tenant/business profile */}
+      {!tenant && !isLoading && (
+        <View style={[styles.noTenantContainer, { backgroundColor: theme.bg }]}>
+          <Ionicons name="business-outline" size={80} color={theme.textDim} />
+          <Text style={[styles.noTenantTitle, { color: theme.textStrong }]}>
+            Business Profile Required
+          </Text>
+          <Text style={[styles.noTenantMessage, { color: theme.textDim }]}>
+            Please set up your business profile before managing your menu.
+          </Text>
+          <TouchableOpacity
+            style={[styles.setupButton, { backgroundColor: theme.primary }]}
+            onPress={() => navigation.navigate('Settings')}
+          >
+            <Ionicons name="add-circle-outline" size={20} color="#fff" />
+            <Text style={styles.setupButtonText}>Set Up Business Profile</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      
+      {/* Only show menu UI if tenant exists */}
+      {tenant && (
+        <>
       {/* Enhanced Header */}
       <LinearGradient
         colors={[theme.primary, theme.accent]}
@@ -738,6 +807,8 @@ const MenuManagementScreen = () => {
           </ScrollView>
         </SafeAreaView>
       </Modal>
+      </>
+      )}
     </SafeAreaView>
   );
 };
@@ -1376,6 +1447,40 @@ const styles = StyleSheet.create({
   selectedCategoryText: {
     // color: '#4F83FF',
     fontWeight: '500',
+  },
+  
+  // No Tenant Message Styles
+  noTenantContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  noTenantTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  noTenantMessage: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 30,
+    lineHeight: 24,
+  },
+  setupButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+    gap: 8,
+  },
+  setupButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

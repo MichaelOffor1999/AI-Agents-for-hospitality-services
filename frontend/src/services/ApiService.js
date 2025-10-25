@@ -41,11 +41,32 @@ const mockTenant = {
 };
 
 class ApiService {
+  // Login API
+  async login({ email, password }) {
+    return this.request('/login', {
+      method: 'POST',
+      body: { email, password },
+    });
+  }
   constructor() {
     this.baseURL = BASE_URL;
     this.headers = {
       'Content-Type': 'application/json',
     };
+  }
+
+  // Signup API
+  async signup(data) {
+    // Map password to password_hash for backend compatibility
+    const payload = {
+      ...data,
+      password_hash: data.password,
+    };
+    delete payload.password;
+    return this.request('/signup', {
+      method: 'POST',
+      body: payload,
+    });
   }
 
   async getAuthToken() {
@@ -103,7 +124,23 @@ class ApiService {
 
         clearTimeout(timeoutId);
         
+        console.log(`[ApiService] Response status for ${endpoint}: ${response.status}`);
+        
+        // Handle 401 Unauthorized - token expired or invalid
+        if (response.status === 401) {
+          console.log('[ApiService] 401 Unauthorized - Token expired or invalid');
+          console.log('[ApiService] Clearing auth data and reloading...');
+          // Clear auth data
+          await AsyncStorage.multiRemove(['auth_token', 'tenant_id']);
+          // Reload the app to redirect to login
+          if (typeof window !== 'undefined') {
+            window.location.reload();
+          }
+          throw new Error('Session expired. Please log in again.');
+        }
+        
         if (!response.ok) {
+          console.log(`[ApiService] Request failed: ${response.status} ${response.statusText}`);
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
@@ -231,6 +268,29 @@ class ApiService {
     return this.request(`/tenants/${tenantId}/preview/greeting`, {
       method: 'POST',
     });
+  }
+
+  // Restaurant APIs
+  async createRestaurant(data) {
+    return this.request('/restaurants', {
+      method: 'POST',
+      body: data,
+    });
+  }
+
+  async updateRestaurant(restaurantId, data) {
+    return this.request(`/restaurants/${restaurantId}`, {
+      method: 'PUT',
+      body: data,
+    });
+  }
+
+  async getRestaurant(restaurantId) {
+    return this.request(`/restaurants/${restaurantId}`);
+  }
+
+  async getRestaurants() {
+    return this.request('/restaurants');
   }
 
   // Menu APIs

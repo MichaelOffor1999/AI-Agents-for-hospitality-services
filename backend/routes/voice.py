@@ -12,6 +12,7 @@ from typing import Optional, Dict, Any
 import json
 from fastapi.responses import FileResponse
 from twilio.twiml.voice_response import VoiceResponse, Play, Record
+import tempfile
 
 # Initialize ElevenLabs client
 elevenlabs_client = ElevenLabsClient()
@@ -20,6 +21,45 @@ router = APIRouter()
 
 
 
+
+# Enhanced Twilio webhook: greet caller and record their response
+@router.post("/twilio")
+async def twilio_greeting_and_record(request: Request):
+    """
+    Greets the caller and records their response. The recording is sent to /api/v1/voice/webhook for further processing.
+    """
+    logging.info("Received Twilio call - greeting and recording")
+    greeting_text = "Hello! Welcome to our AI ordering system. Please tell me how I can help you today after the beep."
+    temp_audio = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
+    audio_path = temp_audio.name
+    temp_audio.close()
+    try:
+        elevenlabs_client.synthesize(greeting_text, audio_path)
+        twiml = f"""
+        <Response>
+            <Play>{audio_path}</Play>
+            <Record maxLength='30' action='/api/v1/voice/webhook' method='POST' timeout='3' />
+            <Play>https://actions.google.com/sounds/v1/alarms/beep_short.ogg</Play>
+        </Response>
+        """
+    except Exception as e:
+        logging.error(f"ElevenLabs synthesis failed for greeting: {e}")
+        # Play a generic error audio or silence
+        twiml = f"""
+        <Response>
+            <Play>https://actions.google.com/sounds/v1/alarms/beep_short.ogg</Play>
+        </Response>
+        """
+    finally:
+        if os.path.exists(audio_path):
+            try:
+                os.remove(audio_path)
+            except Exception as cleanup_err:
+                logging.warning(f"Failed to delete temp greeting audio: {cleanup_err}")
+    return Response(content=twiml, media_type="application/xml")
+
+
+# Existing full-featured webhook for production/advanced use
 @router.post("/webhook")
 async def twilio_webhook(request: Request):
     """
@@ -40,19 +80,24 @@ async def twilio_webhook(request: Request):
         # Initial call greeting
         if call_status == "ringing":
             greeting_text = "Hello! Welcome to our AI ordering system. How may I help you today?"
-            audio_path = f"/tmp/greeting_{caller_id}.mp3"
+            temp_audio = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
+            audio_path = temp_audio.name
+            temp_audio.close()
             try:
                 elevenlabs_client.synthesize(greeting_text, audio_path)
-                response = VoiceResponse()
-                response.play(audio_path)
-                response.record(maxLength="30", action="/voice/webhook", timeout="3")
-                xml_response = str(response)
+                twiml = f"""
+                <Response>
+                    <Play>{audio_path}</Play>
+                    <Record maxLength='30' action='/voice/webhook' timeout='3' />
+                </Response>
+                """
             except Exception as e:
                 logging.error(f"ElevenLabs synthesis failed for greeting: {e}")
-                response = VoiceResponse()
-                response.say("Hello! Welcome to our AI ordering system. How may I help you today?", voice="alice")
-                response.record(maxLength="30", action="/voice/webhook", timeout="3")
-                xml_response = str(response)
+                twiml = f"""
+                <Response>
+                    <Play>https://actions.google.com/sounds/v1/alarms/beep_short.ogg</Play>
+                </Response>
+                """
             finally:
                 # Clean up temp file if it exists
                 if os.path.exists(audio_path):
@@ -60,7 +105,7 @@ async def twilio_webhook(request: Request):
                         os.remove(audio_path)
                     except Exception as cleanup_err:
                         logging.warning(f"Failed to delete temp greeting audio: {cleanup_err}")
-            return Response(content=xml_response, media_type="application/xml")
+            return Response(content=twiml, media_type="application/xml")
 
         # Handle recorded audio
         if recording_url:
@@ -74,26 +119,32 @@ async def twilio_webhook(request: Request):
             restaurant = await db.restaurants.find_one({"phone": restaurant_phone})
             if not restaurant:
                 error_text = "Sorry, this restaurant is not registered in our system."
-                audio_path = f"/tmp/error_{caller_id}.mp3"
+                temp_audio = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
+                audio_path = temp_audio.name
+                temp_audio.close()
                 try:
                     elevenlabs_client.synthesize(error_text, audio_path)
-                    response = VoiceResponse()
-                    response.play(audio_path)
-                    response.hangup()
-                    xml_response = str(response)
+                    twiml = f"""
+                    <Response>
+                        <Play>{audio_path}</Play>
+                        <Hangup/>
+                    </Response>
+                    """
                 except Exception as e:
                     logging.error(f"ElevenLabs synthesis failed for error message: {e}")
-                    response = VoiceResponse()
-                    response.say(error_text, voice="alice")
-                    response.hangup()
-                    xml_response = str(response)
+                    twiml = f"""
+                    <Response>
+                        <Play>https://actions.google.com/sounds/v1/alarms/beep_short.ogg</Play>
+                        <Hangup/>
+                    </Response>
+                    """
                 finally:
                     if os.path.exists(audio_path):
                         try:
                             os.remove(audio_path)
                         except Exception as cleanup_err:
                             logging.warning(f"Failed to delete temp error audio: {cleanup_err}")
-                return Response(content=xml_response, media_type="application/xml")
+                return Response(content=twiml, media_type="application/xml")
 
             transcript = Transcript(
                 restaurant_id=restaurant["_id"],
@@ -107,32 +158,42 @@ async def twilio_webhook(request: Request):
             # 4. Handle the intent (order, booking, or question)
             reply = await handle_intent(intent_response, restaurant["_id"], caller_id, transcript.id)
             reply_text = reply.get("message", "Thank you. Your request has been processed.")
-            audio_path = f"/tmp/reply_{caller_id}.mp3"
+            temp_audio = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
+            audio_path = temp_audio.name
+            temp_audio.close()
             try:
                 elevenlabs_client.synthesize(reply_text, audio_path)
-                response = VoiceResponse()
-                response.play(audio_path)
-                response.hangup()
-                xml_response = str(response)
+                twiml = f"""
+                <Response>
+                    <Play>{audio_path}</Play>
+                    <Hangup/>
+                </Response>
+                """
             except Exception as e:
                 logging.error(f"ElevenLabs synthesis failed for reply: {e}")
-                response = VoiceResponse()
-                response.say(reply_text, voice="alice")
-                response.hangup()
-                xml_response = str(response)
+                twiml = f"""
+                <Response>
+                    <Play>https://actions.google.com/sounds/v1/alarms/beep_short.ogg</Play>
+                    <Hangup/>
+                </Response>
+                """
             finally:
                 if os.path.exists(audio_path):
                     try:
                         os.remove(audio_path)
                     except Exception as cleanup_err:
                         logging.warning(f"Failed to delete temp reply audio: {cleanup_err}")
-            return Response(content=xml_response, media_type="application/xml")
+            return Response(content=twiml, media_type="application/xml")
 
         # Fallback for missing audio
-        response = VoiceResponse()
-        response.say("I'm sorry, I couldn't hear that. Could you please repeat?", voice="alice")
-        response.record(maxLength="30", action="/voice/webhook", timeout="3")
-        return Response(content=str(response), media_type="application/xml")
+        error_audio_url = "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
+        twiml = f"""
+        <Response>
+            <Play>{error_audio_url}</Play>
+            <Record maxLength='30' action='/voice/webhook' timeout='3' />
+        </Response>
+        """
+        return Response(content=twiml, media_type="application/xml")
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
