@@ -42,24 +42,8 @@ const SettingsScreen = ({ navigation }) => {
 
   const retentionOptions = ['30 Days', '60 Days', '90 Days', '6 Months', '1 Year'];
   
-  // Settings sections
+  // Settings sections - removed Business Profile and AI Voice since they're now in sidebar
   const generalSettings = [
-    {
-      id: 'business',
-      title: 'Business Profile',
-      subtitle: 'Update restaurant info, hours & contact details',
-      icon: 'business',
-      color: '#4F83FF',
-      route: 'BusinessProfile',
-    },
-    {
-      id: 'voice',
-      title: 'AI Voice Assistant',
-      subtitle: 'Configure AI responses & voice settings',
-      icon: 'mic',
-      color: '#10B981',
-      route: 'AIVoiceSettings',
-    },
     {
       id: 'transcripts',
       title: 'Call Transcripts',
@@ -74,7 +58,7 @@ const SettingsScreen = ({ navigation }) => {
       subtitle: 'Edit dishes, prices & availability',
       icon: 'restaurant',
       color: '#F59E0B',
-      route: 'MenuManagement',
+      route: 'Menu',
     },
   ];
   

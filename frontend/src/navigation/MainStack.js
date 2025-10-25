@@ -1,8 +1,6 @@
 import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
 import DashboardScreen from '../screens/DashboardScreen';
 import OrdersScreen from '../screens/OrdersScreen';
 import MenuManagementScreen from '../screens/MenuManagementScreen';
@@ -13,41 +11,17 @@ import BusinessProfileScreen from '../screens/BusinessProfileScreenSimple';
 import AIVoiceSettingsScreen from '../screens/AIVoiceSettingsScreen';
 import LoginScreen from '../screens/LoginScreen';
 import SignupScreen from '../screens/SignupScreen';
+import AppLayout from '../components/AppLayout';
 import { useApp } from '../context/AppContext';
 
-const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-function MainTabs() {
-  const { darkMode } = useApp();
+// Wrapper component to add AppLayout to authenticated screens
+function ScreenWithLayout({ component: Component, ...props }) {
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ color, size }) => {
-          let iconName;
-          if (route.name === 'Dashboard') iconName = 'analytics';
-          else if (route.name === 'Orders') iconName = 'basket';
-          else if (route.name === 'Menu') iconName = 'restaurant';
-          else if (route.name === 'Transcripts') iconName = 'chatbubbles';
-          else if (route.name === 'Settings') iconName = 'settings';
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: darkMode ? '#4F83FF' : '#4F83FF',
-        tabBarInactiveTintColor: darkMode ? '#888' : '#888',
-        tabBarStyle: {
-          backgroundColor: darkMode ? '#181A20' : '#fff',
-          borderTopColor: darkMode ? '#222' : '#e0e0e0',
-          height: 60,
-        },
-        headerShown: false,
-      })}
-    >
-      <Tab.Screen name="Dashboard" component={DashboardScreen} />
-      <Tab.Screen name="Orders" component={OrdersScreen} />
-      <Tab.Screen name="Menu" component={MenuManagementScreen} />
-      <Tab.Screen name="Transcripts" component={TranscriptsScreen} />
-      <Tab.Screen name="Settings" component={SettingsScreen} />
-    </Tab.Navigator>
+    <AppLayout>
+      <Component {...props} />
+    </AppLayout>
   );
 }
 
@@ -59,11 +33,35 @@ export default function MainStack() {
     <NavigationContainer theme={darkMode ? DarkTheme : DefaultTheme}>
       {isAuthenticated ? (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="MainTabs" component={MainTabs} />
-          <Stack.Screen name="OrderDetails" component={OrderDetailsScreen} options={{ headerShown: true, title: 'Order Details' }} />
-          <Stack.Screen name="Transcripts" component={TranscriptsScreen} options={{ headerShown: true, title: 'Call Transcripts' }} />
-          <Stack.Screen name="BusinessProfile" component={BusinessProfileScreen} options={{ headerShown: true, title: 'Business Profile' }} />
-          <Stack.Screen name="AIVoiceSettings" component={AIVoiceSettingsScreen} options={{ headerShown: true, title: 'AI Voice Settings' }} />
+          {/* Main screens with sidebar layout */}
+          <Stack.Screen name="Dashboard">
+            {(props) => <ScreenWithLayout component={DashboardScreen} {...props} />}
+          </Stack.Screen>
+          <Stack.Screen name="Orders">
+            {(props) => <ScreenWithLayout component={OrdersScreen} {...props} />}
+          </Stack.Screen>
+          <Stack.Screen name="Menu">
+            {(props) => <ScreenWithLayout component={MenuManagementScreen} {...props} />}
+          </Stack.Screen>
+          <Stack.Screen name="Transcripts">
+            {(props) => <ScreenWithLayout component={TranscriptsScreen} {...props} />}
+          </Stack.Screen>
+          <Stack.Screen name="BusinessProfile">
+            {(props) => <ScreenWithLayout component={BusinessProfileScreen} {...props} />}
+          </Stack.Screen>
+          <Stack.Screen name="AIVoiceSettings">
+            {(props) => <ScreenWithLayout component={AIVoiceSettingsScreen} {...props} />}
+          </Stack.Screen>
+          <Stack.Screen name="Settings">
+            {(props) => <ScreenWithLayout component={SettingsScreen} {...props} />}
+          </Stack.Screen>
+          
+          {/* Modal/Detail screens without sidebar */}
+          <Stack.Screen 
+            name="OrderDetails" 
+            component={OrderDetailsScreen} 
+            options={{ headerShown: true, title: 'Order Details', presentation: 'card' }} 
+          />
         </Stack.Navigator>
       ) : (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
